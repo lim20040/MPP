@@ -87,11 +87,31 @@ function addSubjectBulkRow() {
     row.className = 'subject-bulk-row';
 
     row.innerHTML = `
-        <input type="text" class="bulk-subject" placeholder="과목명 예: 선형대수">
-        <input type="number" class="bulk-start" placeholder="시작 강 예: 1">
-        <input type="number" class="bulk-end" placeholder="끝 강 예: 20">
-        <input type="date" class="bulk-start-date" value="${today}">
-        <input type="date" class="bulk-end-date" value="${today}">
+        <div class="bulk-field bulk-subject-field">
+            <label>과목명</label>
+            <input type="text" class="bulk-subject" placeholder="예: 선형대수">
+        </div>
+
+        <div class="bulk-field">
+            <label>시작 강</label>
+            <input type="number" class="bulk-start" placeholder="예: 1">
+        </div>
+
+        <div class="bulk-field">
+            <label>끝 강</label>
+            <input type="number" class="bulk-end" placeholder="예: 20">
+        </div>
+
+        <div class="bulk-field">
+            <label>시작일</label>
+            <input type="date" class="bulk-start-date" value="${today}">
+        </div>
+
+        <div class="bulk-field">
+            <label>종료일</label>
+            <input type="date" class="bulk-end-date" value="${today}">
+        </div>
+
         <button class="btn-small btn-remove" onclick="removeSubjectBulkRow(this)">삭제</button>
     `;
 

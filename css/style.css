@@ -64,7 +64,7 @@ body {
     background: #EEF2FF;
 }
 
-/* --- 메인 입력 페이지 컨테이너 --- */
+/* --- 입력 페이지 컨테이너 --- */
 .main-container {
     max-width: 1200px;
     margin: 2.5rem auto;
@@ -91,6 +91,7 @@ body {
     width: 100%;
 }
 
+/* --- 카드 --- */
 .card {
     background: var(--card-bg);
     padding: 2rem;
@@ -112,7 +113,7 @@ body {
     padding: 0;
 }
 
-/* --- 입력 폼 --- */
+/* --- 기본 입력 폼 --- */
 .form-group {
     margin-bottom: 1.25rem;
 }
@@ -209,7 +210,7 @@ button {
 
 .btn-small {
     width: auto;
-    padding: 0.7rem 0.9rem;
+    padding: 0.75rem 1rem;
     font-size: 0.85rem;
     white-space: nowrap;
 }
@@ -222,22 +223,68 @@ button {
 /* --- 과목별 일괄 입력 --- */
 .subject-bulk-box {
     background: #F8FAFC;
-    padding: 15px;
-    border-radius: 10px;
+    padding: 18px;
+    border-radius: 12px;
     border: 1px solid var(--border);
-    margin-top: 15px;
+    margin-top: 20px;
+}
+
+.bulk-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #10B981;
+    margin-bottom: 14px;
+    display: block;
 }
 
 .subject-bulk-row {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr 0.8fr 1fr 1fr auto;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
 }
 
-.subject-bulk-row input {
+.bulk-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bulk-field label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.bulk-field input {
+    background: #FFFFFF;
+    padding: 0.7rem 0.85rem;
+}
+
+.bulk-subject-field {
+    grid-column: 1 / -1;
+}
+
+.subject-bulk-row .btn-remove {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 4px;
+}
+
+#bulkExpandedArea {
+    margin-top: 15px;
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
     background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
 }
 
 .bulk-lecture-grid {
@@ -317,10 +364,6 @@ button {
     .week-settings {
         grid-template-columns: repeat(4, 1fr);
     }
-
-    .subject-bulk-row {
-        grid-template-columns: 1fr 1fr;
-    }
 }
 
 @media (max-width: 600px) {
@@ -341,5 +384,9 @@ button {
 
     .card {
         padding: 1.3rem;
+    }
+
+    .subject-bulk-row {
+        grid-template-columns: 1fr;
     }
 }
