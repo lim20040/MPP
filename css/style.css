@@ -34,3 +34,16 @@ button {
 .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
 .subject-tag { background: #eef2f5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #007bff;}
 .day-title { background: #007bff; color: white; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
+/* --- 아래 내용을 style.css 맨 밑에 추가하세요 --- */
+.navbar {
+    background-color: white; padding: 15px 30px; display: flex; 
+    justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+}
+.nav-logo { font-size: 20px; font-weight: bold; color: #333; text-decoration: none; }
+.nav-links a {
+    text-decoration: none; color: #666; font-weight: 500; margin-left: 20px; padding: 8px 12px; border-radius: 6px;
+}
+.nav-links a:hover { background-color: #f0f4f8; color: #007bff; }
+.nav-links a.active { background-color: #e6f2ff; color: #007bff; font-weight: bold; }
+.setting-label { display: block; font-weight: bold; color: #555; margin-bottom: 5px; font-size: 14px; }

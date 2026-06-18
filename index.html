@@ -2,37 +2,24 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>MPP - My Personal Planner</title>
+    <title>내 스케줄 - MPP</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>📅 MPP (My Personal Planner)</h1>
-    </div>
-
-    <div class="main-container">
-        <div class="card">
-            <h2>1. 새 강의 입력</h2>
-            <input type="text" id="subject" placeholder="과목명 (예: 공학수학, 회로이론)">
-            <input type="text" id="lecture" placeholder="강의명 (예: 1강, OT)">
-            <input type="number" id="duration" placeholder="시간 (분 단위)">
-            <button class="btn-add" onclick="addLecture()">목록에 담기 🛒</button>
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">📅 MPP</a>
+        <div class="nav-links">
+            <a href="index.html" class="active">내 스케줄 보기</a>
+            <a href="input.html">새 강의 입력</a>
         </div>
+    </nav>
 
-        <div class="card">
-            <h2>2. 담긴 강의 목록</h2>
-            <div id="cartList" class="list-box">아직 담긴 강의가 없습니다.</div>
-            
-            <div style="margin-top: 20px; border-top: 2px dashed #eee; padding-top: 20px;">
-                <label style="font-weight: bold; color: #555;">하루 학습 가능 시간(분)</label>
-                <input type="number" id="dailyLimit" placeholder="예: 120" value="120">
-                <button class="btn-generate" onclick="generateAndSave()">자동 스케줄 짜기 & 저장 🚀</button>
+    <div class="main-container" style="max-width: 800px;">
+        <div class="card" style="width: 100%;">
+            <h2>나의 최종 스케줄표</h2>
+            <div id="scheduleResult" class="schedule-box" style="max-height: 600px;">
+                불러오는 중... (일정을 입력하려면 위 메뉴를 눌러주세요)
             </div>
-        </div>
-
-        <div class="card">
-            <h2>3. 나의 최종 스케줄표</h2>
-            <div id="scheduleResult" class="schedule-box">불러오는 중...</div>
         </div>
     </div>
 
