@@ -95,8 +95,16 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>스케줄 반영률</label>
+                <input type="number" id="timeReductionRate" value="75" min="50" max="100">
+                <div class="help-text">
+                    원래 강의 시간을 입력하면 스케줄에는 이 비율만큼 자동 반영됩니다. 기본값 75%는 1.5~1.8배속 + 중간 문제풀이 시간을 고려한 값입니다.
+                </div>
+            </div>
+
             <button class="btn-add" style="background: #10B981;" onclick="expandSubjectInputs()">
-                강의별 시간 입력칸 펼치기
+                강의별 원래 시간 입력칸 펼치기
             </button>
 
             <div id="bulkExpandedArea"></div>

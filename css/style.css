@@ -708,3 +708,41 @@ button {
         display: none;
     }
 }
+.help-text {
+    margin-top: 0.45rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.duration-guide {
+    background: #EEF2FF;
+    color: var(--primary);
+    border: 1px solid #C7D2FE;
+    border-radius: 10px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.duration-input-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.duration-input-item span {
+    text-align: center;
+}
+
+.duration-input-item input {
+    width: 100%;
+}
+
+.duration-input-item small {
+    display: block;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}

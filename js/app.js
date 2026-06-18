@@ -9,6 +9,21 @@ window.onload = async () => {
         document.getElementById('bulkStartDate').value = today;
         document.getElementById('bulkEndDate').value = today;
 
+        const savedRate = localStorage.getItem('mpp_time_reduction_rate');
+
+        if (savedRate && document.getElementById('timeReductionRate')) {
+            document.getElementById('timeReductionRate').value = savedRate;
+        }
+
+        const rateInput = document.getElementById('timeReductionRate');
+
+        if (rateInput) {
+            rateInput.addEventListener('change', () => {
+                localStorage.setItem('mpp_time_reduction_rate', rateInput.value);
+                updatePlannedDurationPreview();
+            });
+        }
+
         await loadWeekSettingsFromDB();
         await loadSubjectPlans();
     }
@@ -141,10 +156,17 @@ function expandSubjectInputs() {
         return alert("시작일은 종료일보다 늦을 수 없습니다.");
     }
 
+    const rate = getReductionRate();
+
     let html = `
         <div class="bulk-expanded-subject">
             <div class="bulk-expanded-title">
                 ${subject} ｜ ${start}강 ~ ${end}강 ｜ ${startDate} ~ ${endDate}
+            </div>
+
+            <div class="duration-guide">
+                원래 강의 시간을 입력하세요. 스케줄에는 자동으로 ${rate}%만 반영됩니다.
+                예: 60분 입력 → ${Math.ceil(60 * rate / 100)}분으로 배치
             </div>
 
             <div class="bulk-lecture-grid">
@@ -152,9 +174,10 @@ function expandSubjectInputs() {
 
     for (let i = start; i <= end; i++) {
         html += `
-            <div class="bulk-lecture-item">
+            <div class="bulk-lecture-item duration-input-item">
                 <span>${i}강</span>
-                <input type="number" id="dur_${i}" placeholder="분">
+                <input type="number" id="dur_${i}" placeholder="원래 분" oninput="updateSinglePlannedPreview(${i})">
+                <small id="planned_${i}">반영: -</small>
             </div>
         `;
     }
@@ -179,6 +202,9 @@ async function saveSubjectPlan() {
     const endLecture = parseInt(document.getElementById('bulkEnd').value);
     const startDate = document.getElementById('bulkStartDate').value;
     const endDate = document.getElementById('bulkEndDate').value;
+    const reductionRate = getReductionRate();
+
+    localStorage.setItem('mpp_time_reduction_rate', reductionRate);
 
     if (!subject || isNaN(startLecture) || isNaN(endLecture) || !startDate || !endDate) {
         return alert("과목 정보를 먼저 입력해주세요.");
@@ -193,16 +219,20 @@ async function saveSubjectPlan() {
             return alert("먼저 강의별 시간 입력칸을 펼쳐주세요.");
         }
 
-        const duration = parseInt(input.value);
+        const originalDuration = parseInt(input.value);
 
-        if (isNaN(duration) || duration <= 0) {
-            return alert(`${i}강의 시간을 정확히 입력해주세요.`);
+        if (isNaN(originalDuration) || originalDuration <= 0) {
+            return alert(`${i}강의 원래 시간을 정확히 입력해주세요.`);
         }
+
+        const plannedDuration = calculatePlannedDuration(originalDuration);
 
         lectures.push({
             lecture: `${i}강`,
             lectureNumber: i,
-            duration
+            originalDuration,
+            duration: plannedDuration,
+            reductionRate
         });
     }
 
@@ -260,7 +290,10 @@ function renderSubjectPlans() {
     let html = '';
 
     subjectPlans.forEach(plan => {
-        const totalMinutes = plan.lectures.reduce((sum, lec) => sum + lec.duration, 0);
+        const totalPlannedMinutes = plan.lectures.reduce((sum, lec) => sum + lec.duration, 0);
+        const totalOriginalMinutes = plan.lectures.reduce((sum, lec) => {
+            return sum + (lec.originalDuration || lec.duration);
+        }, 0);
 
         html += `
             <div class="subject-plan-card">
@@ -275,12 +308,15 @@ function renderSubjectPlans() {
                 </div>
 
                 <div class="subject-plan-meta">
-                    총 ${plan.lectures.length}개 강의 · 총 ${totalMinutes}분
+                    총 ${plan.lectures.length}개 강의 · 원래 ${totalOriginalMinutes}분 → 스케줄 반영 ${totalPlannedMinutes}분
                 </div>
 
                 <div class="subject-plan-preview">
                     ${plan.lectures.slice(0, 8).map(lec => `
-                        <span>${lec.lecture} ${lec.duration}분</span>
+                        <span>
+                            ${lec.lecture} 
+                            ${(lec.originalDuration || lec.duration)}분 → ${lec.duration}분
+                        </span>
                     `).join('')}
                     ${plan.lectures.length > 8 ? `<span>+${plan.lectures.length - 8}개</span>` : ''}
                 </div>
@@ -416,6 +452,24 @@ function getDayName(dateKey) {
 
 function extractDateOnly(assignedDate) {
     return String(assignedDate || '').slice(0, 10);
+}
+function getReductionRate() {
+    const input = document.getElementById('timeReductionRate');
+
+    if (!input) return 75;
+
+    const rate = parseInt(input.value);
+
+    if (isNaN(rate) || rate <= 0) {
+        return 75;
+    }
+
+    return Math.min(Math.max(rate, 50), 100);
+}
+
+function calculatePlannedDuration(originalDuration) {
+    const rate = getReductionRate();
+    return Math.max(1, Math.ceil(originalDuration * rate / 100));
 }
 
 // --- 균등 분배 스케줄 생성 ---
@@ -819,4 +873,31 @@ function renderCalendarSchedule() {
 
     html += `</div>`;
     box.innerHTML = html;
+}
+function updateSinglePlannedPreview(lectureNumber) {
+    const input = document.getElementById(`dur_${lectureNumber}`);
+    const preview = document.getElementById(`planned_${lectureNumber}`);
+
+    if (!input || !preview) return;
+
+    const originalDuration = parseInt(input.value);
+
+    if (isNaN(originalDuration) || originalDuration <= 0) {
+        preview.innerText = "반영: -";
+        return;
+    }
+
+    const plannedDuration = calculatePlannedDuration(originalDuration);
+    preview.innerText = `반영: ${plannedDuration}분`;
+}
+
+function updatePlannedDurationPreview() {
+    const start = parseInt(document.getElementById('bulkStart')?.value);
+    const end = parseInt(document.getElementById('bulkEnd')?.value);
+
+    if (isNaN(start) || isNaN(end)) return;
+
+    for (let i = start; i <= end; i++) {
+        updateSinglePlannedPreview(i);
+    }
 }
