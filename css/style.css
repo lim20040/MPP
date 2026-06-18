@@ -76,18 +76,6 @@ body {
     grid-column: 1 / -1;
 }
 
-.schedule-container {
-    max-width: 800px;
-    margin: 2.5rem auto;
-    padding: 0 1.5rem;
-    display: flex;
-    justify-content: center;
-}
-
-.schedule-container .card {
-    width: 100%;
-}
-
 .card {
     background: var(--card-bg);
     padding: 2rem;
@@ -199,185 +187,13 @@ button {
     transform: translateY(-1px);
 }
 
-.btn-small {
-    width: auto;
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-
-.btn-remove {
-    background: #EF4444;
-    color: white;
-}
-
-.subject-bulk-box {
-    background: #F8FAFC;
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    margin-top: 20px;
-}
-
-.bulk-title {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: #10B981;
-    margin-bottom: 14px;
-    display: block;
-}
-
-.subject-bulk-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    align-items: end;
-    background: #FFFFFF;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 12px;
-}
-
-.bulk-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.bulk-field label {
-    font-size: 0.78rem;
-    font-weight: 700;
+.help-text {
+    margin-top: 0.45rem;
     color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
 }
 
-.bulk-field input {
-    background: #FFFFFF;
-    padding: 0.7rem 0.85rem;
-}
-
-.bulk-subject-field {
-    grid-column: 1 / -1;
-}
-
-.subject-bulk-row .btn-remove {
-    grid-column: 1 / -1;
-    width: 100%;
-    margin-top: 4px;
-}
-
-#bulkExpandedArea {
-    margin-top: 15px;
-    display: none;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 10px;
-    background: white;
-    border: 1px solid #E2E8F0;
-    border-radius: 8px;
-}
-
-.bulk-lecture-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-}
-
-.bulk-lecture-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #F8FAFC;
-    padding: 8px;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-}
-
-.bulk-lecture-item span {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--primary);
-}
-
-.bulk-lecture-item input {
-    width: 60px;
-    padding: 4px;
-    margin: 0;
-    text-align: center;
-    border: 1px solid #CBD5E1;
-    border-radius: 4px;
-    background: white;
-}
-
-.item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: #F8FAFC;
-    border-radius: 10px;
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--border);
-}
-
-.subject-tag {
-    background: var(--primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-right: 8px;
-}
-
-.day-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 2rem 0 1rem 0;
-    padding-left: 0.5rem;
-    border-left: 4px solid var(--primary);
-}
-
-.schedule-box {
-    max-height: 650px;
-    overflow-y: auto;
-}
-
-@media (max-width: 900px) {
-    .main-container {
-        grid-template-columns: 1fr;
-    }
-
-    .week-settings {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 600px) {
-    .navbar {
-        padding: 1rem;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .nav-links a {
-        margin-left: 0;
-        padding: 0.4rem 0.7rem;
-    }
-
-    .week-settings {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .card {
-        padding: 1.3rem;
-    }
-
-    .subject-bulk-row {
-        grid-template-columns: 1fr;
-    }
-}
 .empty-box {
     background: #F8FAFC;
     border: 1px dashed #CBD5E1;
@@ -400,6 +216,66 @@ button {
     font-weight: 800;
     color: var(--primary);
     margin-bottom: 10px;
+}
+
+.duration-guide {
+    background: #EEF2FF;
+    color: var(--primary);
+    border: 1px solid #C7D2FE;
+    border-radius: 10px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.bulk-lecture-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.bulk-lecture-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8FAFC;
+    padding: 8px;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+}
+
+.duration-input-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.duration-input-item span {
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.duration-input-item input {
+    width: 100%;
+}
+
+.duration-input-item small {
+    display: block;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.subject-tag {
+    background: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 8px;
 }
 
 .subject-plan-card {
@@ -462,6 +338,7 @@ button {
 .subject-plan-actions button.danger {
     background: #EF4444;
 }
+
 .calendar-page-container {
     max-width: 1400px;
     margin: 2.5rem auto;
@@ -580,12 +457,40 @@ button {
     border: 1px solid #C7D2FE;
     border-radius: 8px;
     padding: 5px 6px;
+}
+
+.calendar-task.done {
+    opacity: 0.45;
+    background: #E5E7EB;
+    border-color: #CBD5E1;
+}
+
+.calendar-task.done .calendar-task-subject,
+.calendar-task.done .calendar-task-lecture,
+.calendar-task.done .calendar-task-duration {
+    text-decoration: line-through;
+}
+
+.calendar-task-check {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.calendar-task-check input {
+    width: auto;
+    margin-top: 3px;
+    padding: 0;
+    box-shadow: none;
+}
+
+.calendar-task-check span {
+    min-width: 0;
 }
 
 .calendar-task-subject {
+    display: block;
     font-size: 0.72rem;
     font-weight: 800;
     color: var(--primary);
@@ -595,102 +500,54 @@ button {
 }
 
 .calendar-task-lecture {
+    display: block;
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--text-main);
 }
 
 .calendar-task-duration {
+    display: block;
     font-size: 0.7rem;
     color: var(--text-muted);
 }
 
-.empty-box {
-    background: #F8FAFC;
-    border: 1px dashed #CBD5E1;
+.reschedule-notice {
+    background: #FFFBEB;
+    border: 1px solid #FBBF24;
+    color: #92400E;
     border-radius: 12px;
-    padding: 1.2rem;
-    text-align: center;
-    color: var(--text-muted);
+    padding: 1rem;
+    margin-bottom: 1.2rem;
     font-size: 0.9rem;
 }
 
-.bulk-expanded-subject {
-    margin-top: 15px;
-    padding: 14px;
-    background: white;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-}
-
-.bulk-expanded-title {
-    font-weight: 800;
-    color: var(--primary);
-    margin-bottom: 10px;
-}
-
-.subject-plan-card {
-    background: #F8FAFC;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.subject-plan-header {
+.reschedule-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.subject-plan-date {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-.subject-plan-meta {
-    margin-top: 0.7rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.subject-plan-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     margin-top: 0.8rem;
 }
 
-.subject-plan-preview span {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    color: var(--text-main);
-}
-
-.subject-plan-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 0.9rem;
-}
-
-.subject-plan-actions button {
+.reschedule-actions button {
     padding: 0.65rem;
     font-size: 0.85rem;
-    background: var(--primary);
+    background: #F59E0B;
     color: white;
 }
 
-.subject-plan-actions button.danger {
-    background: #EF4444;
+.reschedule-actions button.muted {
+    background: #94A3B8;
 }
 
 @media (max-width: 900px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+
+    .week-settings {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
     .calendar-page-container {
         padding: 0 0.75rem;
     }
@@ -708,41 +565,24 @@ button {
         display: none;
     }
 }
-.help-text {
-    margin-top: 0.45rem;
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    line-height: 1.5;
-}
 
-.duration-guide {
-    background: #EEF2FF;
-    color: var(--primary);
-    border: 1px solid #C7D2FE;
-    border-radius: 10px;
-    padding: 0.8rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
+@media (max-width: 600px) {
+    .navbar {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
-.duration-input-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-}
+    .nav-links a {
+        margin-left: 0;
+        padding: 0.4rem 0.7rem;
+    }
 
-.duration-input-item span {
-    text-align: center;
-}
+    .week-settings {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-.duration-input-item input {
-    width: 100%;
-}
-
-.duration-input-item small {
-    display: block;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.72rem;
+    .card {
+        padding: 1.3rem;
+    }
 }

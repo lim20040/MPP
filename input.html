@@ -2,134 +2,32 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>새 강의 입력 - MPP</title>
+    <title>내 스케줄 - MPP</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <nav class="navbar">
         <a href="index.html" class="nav-logo">📅 MPP 플래너</a>
         <div class="nav-links">
-            <a href="index.html">내 스케줄 보기</a>
-            <a href="input.html" class="active">새 강의 입력</a>
+            <a href="index.html" class="active">내 스케줄 보기</a>
+            <a href="input.html">새 강의 입력</a>
         </div>
     </nav>
 
-    <div class="main-container">
-
-        <div class="card full-width">
-            <h2>⏰ 요일별 공부 가능 시간 설정</h2>
-
-            <div class="week-settings">
-                <div class="time-input">
-                    <label>일요일</label>
-                    <input type="number" id="time-0" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>월요일</label>
-                    <input type="number" id="time-1" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>화요일</label>
-                    <input type="number" id="time-2" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>수요일</label>
-                    <input type="number" id="time-3" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>목요일</label>
-                    <input type="number" id="time-4" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>금요일</label>
-                    <input type="number" id="time-5" placeholder="분">
-                </div>
-
-                <div class="time-input">
-                    <label>토요일</label>
-                    <input type="number" id="time-6" placeholder="분">
-                </div>
+    <div class="calendar-page-container">
+        <div class="card calendar-card">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" onclick="moveCalendarMonth(-1)">‹</button>
+                <h2 id="calendarTitle">📅 나의 학습 달력</h2>
+                <button class="calendar-nav-btn" onclick="moveCalendarMonth(1)">›</button>
             </div>
 
-            <button class="btn-generate" onclick="saveWeekSettingsToDB()">
-                요일별 가능 시간 저장
-            </button>
+            <div id="rescheduleNotice" class="reschedule-notice" style="display: none;"></div>
+
+            <div id="scheduleResult" class="calendar-box">
+                불러오는 중...
+            </div>
         </div>
-
-        <div class="card">
-            <h2>📚 과목별 저장</h2>
-
-            <input type="hidden" id="editingSubjectId">
-
-            <div class="form-group">
-                <label>과목명</label>
-                <input type="text" id="bulkSubject" placeholder="예: 미적분">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label>시작 강</label>
-                    <input type="number" id="bulkStart" placeholder="예: 1">
-                </div>
-
-                <div class="form-group">
-                    <label>끝 강</label>
-                    <input type="number" id="bulkEnd" placeholder="예: 80">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label>시작일</label>
-                    <input type="date" id="bulkStartDate">
-                </div>
-
-                <div class="form-group">
-                    <label>종료일</label>
-                    <input type="date" id="bulkEndDate">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>스케줄 반영률</label>
-                <input type="number" id="timeReductionRate" value="75" min="50" max="100">
-                <div class="help-text">
-                    원래 강의 시간을 입력하면 스케줄에는 이 비율만큼 자동 반영됩니다. 기본값 75%는 1.5~1.8배속 + 중간 문제풀이 시간을 고려한 값입니다.
-                </div>
-            </div>
-
-            <button class="btn-add" style="background: #10B981;" onclick="expandSubjectInputs()">
-                강의별 원래 시간 입력칸 펼치기
-            </button>
-
-            <div id="bulkExpandedArea"></div>
-
-            <button id="btnSaveSubject" class="btn-generate" style="display: none;" onclick="saveSubjectPlan()">
-                이 과목 저장하기
-            </button>
-
-            <button id="btnCancelEdit" class="btn-add" style="display: none; margin-top: 10px; background: #94A3B8;" onclick="resetSubjectForm()">
-                수정 취소
-            </button>
-        </div>
-
-        <div class="card">
-            <h2>🗂 저장된 과목</h2>
-
-            <div id="subjectPlanList">
-                저장된 과목을 불러오는 중...
-            </div>
-
-            <button class="btn-generate" onclick="generateAndSaveFromSubjects()">
-                저장된 과목들로 스케줄 자동 생성
-            </button>
-        </div>
-
     </div>
 
     <script src="js/app.js"></script>

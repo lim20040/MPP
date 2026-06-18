@@ -1,6 +1,7 @@
 let subjectPlans = [];
 let loadedScheduleData = [];
 let calendarCurrentDate = new Date();
+let weekSettingsCache = {};
 
 window.onload = async () => {
     const today = new Date().toISOString().split('T')[0];
@@ -30,8 +31,62 @@ window.onload = async () => {
 
     if (document.getElementById('scheduleResult')) {
         await loadSchedule();
+        await checkOverdueAndOfferReschedule();
     }
 };
+
+// --- 공통 날짜 함수 ---
+function parseLocalDate(dateString) {
+    const [y, m, d] = String(dateString).split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function formatDateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function getTodayKey() {
+    return formatDateKey(new Date());
+}
+
+function addDays(date, days) {
+    const copied = new Date(date);
+    copied.setDate(copied.getDate() + days);
+    return copied;
+}
+
+function getDateRange(startDate, endDate) {
+    const dates = [];
+    let current = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+
+    while (current <= end) {
+        dates.push(formatDateKey(current));
+        current = addDays(current, 1);
+    }
+
+    return dates;
+}
+
+function getDayIndex(dateKey) {
+    return parseLocalDate(dateKey).getDay();
+}
+
+function getDayName(dateKey) {
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    return dayNames[getDayIndex(dateKey)];
+}
+
+function extractDateOnly(assignedDate) {
+    return String(assignedDate || '').slice(0, 10);
+}
+
+function makeLectureKey(subject, lecture) {
+    return `${subject}__${lecture}`;
+}
 
 // --- 요일별 설정 DB 저장/불러오기 ---
 async function saveWeekSettingsToDB() {
@@ -64,6 +119,7 @@ async function saveWeekSettingsToDB() {
             return;
         }
 
+        weekSettingsCache = weekSettings;
         alert("요일별 가능 시간이 저장되었습니다.");
 
     } catch (error) {
@@ -78,12 +134,15 @@ async function loadWeekSettingsFromDB() {
 
         if (!res.ok) {
             console.error("요일별 시간 불러오기 실패");
-            return;
+            return {};
         }
 
         const data = await res.json();
+        const settings = {};
 
         data.forEach(item => {
+            settings[item.day_index] = item.minutes;
+
             const input = document.getElementById(`time-${item.day_index}`);
 
             if (input) {
@@ -91,9 +150,33 @@ async function loadWeekSettingsFromDB() {
             }
         });
 
+        weekSettingsCache = settings;
+        return settings;
+
     } catch (error) {
         console.error("요일별 시간 불러오기 오류:", error);
+        return {};
     }
+}
+
+// --- 스케줄 반영률 ---
+function getReductionRate() {
+    const input = document.getElementById('timeReductionRate');
+
+    if (!input) return 75;
+
+    const rate = parseInt(input.value);
+
+    if (isNaN(rate) || rate <= 0) {
+        return 75;
+    }
+
+    return Math.min(Math.max(rate, 50), 100);
+}
+
+function calculatePlannedDuration(originalDuration) {
+    const rate = getReductionRate();
+    return Math.max(1, Math.ceil(originalDuration * rate / 100));
 }
 
 // --- 과목 저장소 불러오기 ---
@@ -192,6 +275,34 @@ function expandSubjectInputs() {
     area.style.display = 'block';
 
     document.getElementById('btnSaveSubject').style.display = 'block';
+}
+
+function updateSinglePlannedPreview(lectureNumber) {
+    const input = document.getElementById(`dur_${lectureNumber}`);
+    const preview = document.getElementById(`planned_${lectureNumber}`);
+
+    if (!input || !preview) return;
+
+    const originalDuration = parseInt(input.value);
+
+    if (isNaN(originalDuration) || originalDuration <= 0) {
+        preview.innerText = "반영: -";
+        return;
+    }
+
+    const plannedDuration = calculatePlannedDuration(originalDuration);
+    preview.innerText = `반영: ${plannedDuration}분`;
+}
+
+function updatePlannedDurationPreview() {
+    const start = parseInt(document.getElementById('bulkStart')?.value);
+    const end = parseInt(document.getElementById('bulkEnd')?.value);
+
+    if (isNaN(start) || isNaN(end)) return;
+
+    for (let i = start; i <= end; i++) {
+        updateSinglePlannedPreview(i);
+    }
 }
 
 // --- 과목 저장 ---
@@ -313,10 +424,7 @@ function renderSubjectPlans() {
 
                 <div class="subject-plan-preview">
                     ${plan.lectures.slice(0, 8).map(lec => `
-                        <span>
-                            ${lec.lecture} 
-                            ${(lec.originalDuration || lec.duration)}분 → ${lec.duration}분
-                        </span>
+                        <span>${lec.lecture} ${(lec.originalDuration || lec.duration)}분 → ${lec.duration}분</span>
                     `).join('')}
                     ${plan.lectures.length > 8 ? `<span>+${plan.lectures.length - 8}개</span>` : ''}
                 </div>
@@ -345,13 +453,20 @@ function editSubjectPlan(id) {
     document.getElementById('bulkStartDate').value = plan.start_date;
     document.getElementById('bulkEndDate').value = plan.end_date;
 
+    const firstLecture = plan.lectures[0];
+
+    if (firstLecture && firstLecture.reductionRate && document.getElementById('timeReductionRate')) {
+        document.getElementById('timeReductionRate').value = firstLecture.reductionRate;
+    }
+
     expandSubjectInputs();
 
     plan.lectures.forEach(lec => {
         const input = document.getElementById(`dur_${lec.lectureNumber}`);
 
         if (input) {
-            input.value = lec.duration;
+            input.value = lec.originalDuration || lec.duration;
+            updateSinglePlannedPreview(lec.lectureNumber);
         }
     });
 
@@ -407,69 +522,6 @@ function resetSubjectForm() {
     document.getElementById('btnSaveSubject').style.display = 'none';
     document.getElementById('btnSaveSubject').innerText = "이 과목 저장하기";
     document.getElementById('btnCancelEdit').style.display = 'none';
-}
-
-// --- 날짜 도우미 ---
-function parseLocalDate(dateString) {
-    const [y, m, d] = dateString.split('-').map(Number);
-    return new Date(y, m - 1, d);
-}
-
-function formatDateKey(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-}
-
-function addDays(date, days) {
-    const copied = new Date(date);
-    copied.setDate(copied.getDate() + days);
-    return copied;
-}
-
-function getDateRange(startDate, endDate) {
-    const dates = [];
-    let current = parseLocalDate(startDate);
-    const end = parseLocalDate(endDate);
-
-    while (current <= end) {
-        dates.push(formatDateKey(current));
-        current = addDays(current, 1);
-    }
-
-    return dates;
-}
-
-function getDayIndex(dateKey) {
-    return parseLocalDate(dateKey).getDay();
-}
-
-function getDayName(dateKey) {
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-    return dayNames[getDayIndex(dateKey)];
-}
-
-function extractDateOnly(assignedDate) {
-    return String(assignedDate || '').slice(0, 10);
-}
-function getReductionRate() {
-    const input = document.getElementById('timeReductionRate');
-
-    if (!input) return 75;
-
-    const rate = parseInt(input.value);
-
-    if (isNaN(rate) || rate <= 0) {
-        return 75;
-    }
-
-    return Math.min(Math.max(rate, 50), 100);
-}
-
-function calculatePlannedDuration(originalDuration) {
-    const rate = getReductionRate();
-    return Math.max(1, Math.ceil(originalDuration * rate / 100));
 }
 
 // --- 균등 분배 스케줄 생성 ---
@@ -589,7 +641,6 @@ function createBalancedSchedule(lectures, weekLimits) {
         return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
     }
 
-    // 핵심 1: 각 과목의 강의마다 "이쯤에 들어가야 하는 목표 날짜"를 먼저 만든다.
     groups.forEach(group => {
         const studyDates = getStudyDatesForGroup(group);
 
@@ -614,7 +665,6 @@ function createBalancedSchedule(lectures, weekLimits) {
             if (idealIndex >= studyDates.length) idealIndex = studyDates.length - 1;
 
             group.idealDates.push(studyDates[idealIndex]);
-
             accumulated += lec.duration;
         });
     });
@@ -626,8 +676,6 @@ function createBalancedSchedule(lectures, weekLimits) {
         assignedByDateSubject[dateKey] = {};
     });
 
-    // 핵심 2: 날짜별로 돌면서, 목표 날짜가 된 강의만 배치한다.
-    // 즉, 미래에 들어갈 강의를 너무 앞당겨서 오늘에 몰아넣지 않는다.
     dateKeys.forEach(dateKey => {
         let safety = 0;
 
@@ -644,11 +692,7 @@ function createBalancedSchedule(lectures, weekLimits) {
                     const idealDate = group.idealDates[group.pointer];
 
                     if (!idealDate) return false;
-
-                    // 아직 목표 날짜가 안 된 강의는 미리 당겨 넣지 않는다.
                     if (idealDate > dateKey) return false;
-
-                    // 하루 가능 시간보다 큰 강의는 여기서 못 넣는다.
                     if (nextLecture.duration > remainingCapacity[dateKey]) return false;
 
                     return true;
@@ -661,30 +705,20 @@ function createBalancedSchedule(lectures, weekLimits) {
                     const daysLeft = getDaysLeft(group, dateKey);
                     const remainingDuration = getRemainingDuration(group);
                     const remainingCapacityForGroup = getRemainingCapacityForGroup(group, dateKey);
-
                     const alreadySameSubjectToday = assignedByDateSubject[dateKey][group.subject] || 0;
 
                     let priority = 0;
 
-                    // 목표 날짜보다 밀린 강의는 강하게 우선
                     priority += daysAfterIdeal * 120;
-
-                    // 마감이 가까울수록 우선
                     priority += 80 / (daysLeft + 1);
-
-                    // 남은 기간 대비 분량이 빡빡할수록 우선
                     priority += remainingDuration / Math.max(remainingCapacityForGroup, 1) * 100;
 
-                    // 마감일 당일이면 강하게 우선
                     if (dateKey === group.endDate) {
                         priority += 300;
                     }
 
-                    // 같은 날 같은 과목이 이미 들어갔으면 강하게 감점
-                    // 이게 한 날짜에 한 과목이 몰리는 걸 막는 핵심
                     priority -= alreadySameSubjectToday * 500;
 
-                    // 그래도 너무 늦은 과목은 살려야 하므로 마감 임박이면 감점 완화
                     if (daysLeft <= 1) {
                         priority += alreadySameSubjectToday * 250;
                     }
@@ -719,7 +753,8 @@ function createBalancedSchedule(lectures, weekLimits) {
                 subject: chosenLecture.subject,
                 lecture: chosenLecture.lecture,
                 duration: chosenLecture.duration,
-                assigned_date: `${dateKey} (${getDayName(dateKey)})`
+                assigned_date: `${dateKey} (${getDayName(dateKey)})`,
+                is_done: chosenLecture.is_done === true
             });
 
             remainingCapacity[dateKey] -= chosenLecture.duration;
@@ -740,7 +775,8 @@ function createBalancedSchedule(lectures, weekLimits) {
                 subject: lec.subject,
                 lecture: lec.lecture,
                 duration: lec.duration,
-                assigned_date: `${lec.endDate} (${getDayName(lec.endDate)})`
+                assigned_date: `${lec.endDate} (${getDayName(lec.endDate)})`,
+                is_done: lec.is_done === true
             });
 
             group.pointer++;
@@ -782,7 +818,8 @@ async function generateAndSaveFromSubjects() {
                 lecture: lec.lecture,
                 duration: lec.duration,
                 startDate: plan.start_date,
-                endDate: plan.end_date
+                endDate: plan.end_date,
+                is_done: false
             });
         });
     });
@@ -839,6 +876,196 @@ async function generateAndSaveFromSubjects() {
     }
 }
 
+// --- 완료 체크 ---
+async function toggleTaskDone(id, checked) {
+    try {
+        const task = loadedScheduleData.find(item => Number(item.id) === Number(id));
+
+        if (task) {
+            task.is_done = checked;
+        }
+
+        renderCalendarSchedule();
+
+        const res = await fetch('/api/tasks', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id,
+                is_done: checked
+            })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            alert(`완료 상태 저장 실패: ${result.error || '알 수 없는 오류'}`);
+
+            if (task) {
+                task.is_done = !checked;
+            }
+
+            renderCalendarSchedule();
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("완료 상태 저장 중 오류가 발생했습니다.");
+        await loadSchedule();
+    }
+}
+
+// --- 이월 확인 ---
+async function checkOverdueAndOfferReschedule() {
+    const todayKey = getTodayKey();
+
+    const overdueUndone = loadedScheduleData.filter(task => {
+        const dateKey = extractDateOnly(task.assigned_date);
+        return dateKey < todayKey && task.is_done !== true;
+    });
+
+    if (overdueUndone.length === 0) {
+        return;
+    }
+
+    const notice = document.getElementById('rescheduleNotice');
+
+    if (!notice) {
+        return;
+    }
+
+    notice.style.display = 'block';
+    notice.innerHTML = `
+        <div>
+            <b>미완료 강의 ${overdueUndone.length}개가 이전 날짜에 남아 있습니다.</b><br>
+            완료한 강의는 그대로 두고, 미완료 강의와 오늘 이후 계획만 다시 분배할 수 있습니다.
+        </div>
+        <div class="reschedule-actions">
+            <button onclick="rescheduleUndoneFromToday()">자동 재분배하기</button>
+            <button class="muted" onclick="hideRescheduleNotice()">나중에 하기</button>
+        </div>
+    `;
+}
+
+function hideRescheduleNotice() {
+    const notice = document.getElementById('rescheduleNotice');
+
+    if (notice) {
+        notice.style.display = 'none';
+    }
+}
+
+// --- 미완료 + 미래 일정 자동 재분배 ---
+async function rescheduleUndoneFromToday() {
+    const todayKey = getTodayKey();
+
+    await loadWeekSettingsFromDB();
+    await loadSubjectPlans();
+
+    if (subjectPlans.length === 0) {
+        return alert("저장된 과목이 없어서 자동 재분배할 수 없습니다.");
+    }
+
+    const completedTasks = loadedScheduleData.filter(task => task.is_done === true);
+    const completedKeys = new Set(
+        completedTasks.map(task => makeLectureKey(task.subject, task.lecture))
+    );
+
+    const lecturesToReschedule = [];
+
+    subjectPlans.forEach(plan => {
+        plan.lectures.forEach(lec => {
+            const key = makeLectureKey(plan.subject, lec.lecture);
+
+            if (completedKeys.has(key)) {
+                return;
+            }
+
+            const adjustedStartDate = todayKey > plan.start_date ? todayKey : plan.start_date;
+
+            lecturesToReschedule.push({
+                subject: plan.subject,
+                lecture: lec.lecture,
+                duration: lec.duration,
+                startDate: adjustedStartDate,
+                endDate: plan.end_date,
+                is_done: false
+            });
+        });
+    });
+
+    if (lecturesToReschedule.length === 0) {
+        return alert("재분배할 미완료 강의가 없습니다.");
+    }
+
+    const result = createBalancedSchedule(lecturesToReschedule, weekSettingsCache);
+    let newPendingSchedule = result.finalSchedule;
+
+    if (result.unassigned.length > 0) {
+        newPendingSchedule = newPendingSchedule.concat(result.unassigned);
+
+        alert(
+            `오늘 이후 가능 시간 안에 모두 배정하지 못한 강의가 ${result.unassigned.length}개 있습니다.\n` +
+            `해당 강의는 각 과목의 종료일에 임시 배치했습니다.`
+        );
+    }
+
+    const preservedCompletedSchedule = completedTasks.map(task => ({
+        subject: task.subject,
+        lecture: task.lecture,
+        duration: task.duration,
+        assigned_date: task.assigned_date,
+        is_done: true
+    }));
+
+    const finalSchedule = preservedCompletedSchedule.concat(newPendingSchedule);
+
+    finalSchedule.sort((a, b) => {
+        if (a.assigned_date !== b.assigned_date) {
+            return a.assigned_date.localeCompare(b.assigned_date);
+        }
+
+        if (a.is_done !== b.is_done) {
+            return a.is_done ? -1 : 1;
+        }
+
+        if (a.subject !== b.subject) {
+            return a.subject.localeCompare(b.subject);
+        }
+
+        return a.lecture.localeCompare(b.lecture, 'ko', {
+            numeric: true
+        });
+    });
+
+    try {
+        const res = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ schedule: finalSchedule })
+        });
+
+        const resultText = await res.text();
+
+        if (!res.ok) {
+            alert(`자동 재분배 실패: 서버 응답 코드 ${res.status}\n${resultText}`);
+            return;
+        }
+
+        alert("미완료 강의와 오늘 이후 계획을 다시 분배했습니다.");
+        hideRescheduleNotice();
+        await loadSchedule();
+
+    } catch (error) {
+        console.error(error);
+        alert("자동 재분배 중 오류가 발생했습니다.");
+    }
+}
+
 // --- 달력 이동 ---
 function moveCalendarMonth(delta) {
     calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
@@ -855,6 +1082,7 @@ async function loadSchedule() {
 
         if (loadedScheduleData.length > 0) {
             const firstDate = extractDateOnly(loadedScheduleData[0].assigned_date);
+
             if (firstDate) {
                 calendarCurrentDate = parseLocalDate(firstDate);
             }
@@ -935,20 +1163,30 @@ function renderCalendarSchedule() {
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const tasks = scheduleByDate[dateKey] || [];
         const totalMinutes = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
+        const doneCount = tasks.filter(task => task.is_done === true).length;
 
         html += `
             <div class="calendar-day ${tasks.length > 0 ? 'has-task' : ''}">
                 <div class="calendar-day-top">
                     <span class="calendar-date-num">${day}</span>
-                    ${tasks.length > 0 ? `<span class="calendar-total">${totalMinutes}분</span>` : ''}
+                    ${tasks.length > 0 ? `<span class="calendar-total">${doneCount}/${tasks.length} · ${totalMinutes}분</span>` : ''}
                 </div>
 
                 <div class="calendar-task-list">
                     ${tasks.map(task => `
-                        <div class="calendar-task">
-                            <span class="calendar-task-subject">${task.subject}</span>
-                            <span class="calendar-task-lecture">${task.lecture}</span>
-                            <span class="calendar-task-duration">${task.duration}분</span>
+                        <div class="calendar-task ${task.is_done ? 'done' : ''}">
+                            <label class="calendar-task-check">
+                                <input
+                                    type="checkbox"
+                                    ${task.is_done ? 'checked' : ''}
+                                    onchange="toggleTaskDone(${task.id}, this.checked)"
+                                >
+                                <span>
+                                    <span class="calendar-task-subject">${task.subject}</span>
+                                    <span class="calendar-task-lecture">${task.lecture}</span>
+                                    <span class="calendar-task-duration">${task.duration}분</span>
+                                </span>
+                            </label>
                         </div>
                     `).join('')}
                 </div>
@@ -958,31 +1196,4 @@ function renderCalendarSchedule() {
 
     html += `</div>`;
     box.innerHTML = html;
-}
-function updateSinglePlannedPreview(lectureNumber) {
-    const input = document.getElementById(`dur_${lectureNumber}`);
-    const preview = document.getElementById(`planned_${lectureNumber}`);
-
-    if (!input || !preview) return;
-
-    const originalDuration = parseInt(input.value);
-
-    if (isNaN(originalDuration) || originalDuration <= 0) {
-        preview.innerText = "반영: -";
-        return;
-    }
-
-    const plannedDuration = calculatePlannedDuration(originalDuration);
-    preview.innerText = `반영: ${plannedDuration}분`;
-}
-
-function updatePlannedDurationPreview() {
-    const start = parseInt(document.getElementById('bulkStart')?.value);
-    const end = parseInt(document.getElementById('bulkEnd')?.value);
-
-    if (isNaN(start) || isNaN(end)) return;
-
-    for (let i = start; i <= end; i++) {
-        updateSinglePlannedPreview(i);
-    }
 }
