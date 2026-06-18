@@ -1,26 +1,66 @@
-/* --- 기존 style.css 내용 맨 밑에 그대로 추가해 주세요 --- */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* 기본 배경 및 폰트 */
+body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: #f4f7f6;
+    margin: 0; padding: 0;
+    color: #333;
+}
+
+/* 상단 네비게이션(메뉴바) */
+.navbar {
+    background-color: white; padding: 15px 30px; display: flex; 
+    justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+}
+.nav-logo { font-size: 20px; font-weight: bold; color: #333; text-decoration: none; }
+.nav-links a {
+    text-decoration: none; color: #666; font-weight: 500; margin-left: 20px; padding: 8px 12px; border-radius: 6px;
+}
+.nav-links a:hover { background-color: #f0f4f8; color: #007bff; }
+.nav-links a.active { background-color: #e6f2ff; color: #007bff; font-weight: bold; }
+
+/* 메인 구역 및 하얀색 카드 상자 */
+.main-container {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    max-width: 1300px; margin: 0 auto; justify-content: center;
+    padding: 0 20px 50px 20px;
+}
+.card {
+    background: white; padding: 25px; border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    flex: 1; min-width: 300px; max-width: 400px;
+}
+h2 { font-size: 18px; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; }
+
+/* 입력창 및 버튼 */
+input {
+    width: 100%; padding: 12px; margin-bottom: 10px;
+    border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px;
+}
+button {
+    width: 100%; padding: 14px; border: none; border-radius: 6px;
+    font-size: 15px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s;
+}
+.btn-add { background-color: #6c757d; }
+.btn-add:hover { background-color: #5a6268; }
+.btn-generate { background-color: #007bff; margin-top: 10px;}
+.btn-generate:hover { background-color: #0056b3; }
+
+/* 목록 및 스케줄 텍스트 */
+.list-box, .schedule-box { max-height: 400px; overflow-y: auto; font-size: 14px;}
+.item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+.subject-tag { background: #eef2f5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #007bff;}
+.day-title { color: white; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
+.setting-label { display: block; font-weight: bold; color: #555; margin-bottom: 5px; font-size: 14px; margin-top: 10px;}
+
+/* 요일별 설정창 가로 배열 */
 .week-settings {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    margin-top: 15px;
+    display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; margin-top: 15px;
 }
-.time-input {
-    flex: 1;
-    min-width: 80px;
-    text-align: center;
-}
-.time-input label {
-    display: block;
-    font-size: 13px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #555;
-}
-.time-input input {
-    text-align: center;
-    padding: 8px;
-}
+.time-input { flex: 1; min-width: 80px; text-align: center; }
+.time-input label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
+.time-input input { text-align: center; padding: 8px; }
 .text-primary label { color: #007bff; }
 .text-danger label { color: #dc3545; }
