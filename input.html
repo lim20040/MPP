@@ -7,61 +7,58 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="index.html" class="nav-logo">📅 MPP 플래너</a>
+        <a href="index.html" class="nav-logo">📅 MPP PLANNER</a>
         <div class="nav-links">
-            <a href="index.html">내 스케줄 보기</a>
-            <a href="input.html" class="active">새 강의 입력</a>
+            <a href="index.html">내 스케줄</a>
+            <a href="input.html" class="active">새 일정 만들기</a>
         </div>
     </nav>
 
-    <div class="main-container" style="max-width: 1300px;">
-        <div class="card" style="max-width: 100%; flex: 1 1 100%;">
-            <h2>⚙️ 요일별 공부 가능 시간 설정 (분 단위)</h2>
+    <div class="main-container">
+        <div class="card full-width">
+            <h2>⚙️ 요일별 공부 가능 시간 (분)</h2>
             <div class="week-settings">
-                <div class="time-input">
-                    <label>월요일</label><input type="number" id="time-1" value="120">
-                </div>
-                <div class="time-input">
-                    <label>화요일</label><input type="number" id="time-2" value="120">
-                </div>
-                <div class="time-input">
-                    <label>수요일</label><input type="number" id="time-3" value="120">
-                </div>
-                <div class="time-input">
-                    <label>목요일</label><input type="number" id="time-4" value="120">
-                </div>
-                <div class="time-input">
-                    <label>금요일</label><input type="number" id="time-5" value="120">
-                </div>
-                <div class="time-input text-primary">
-                    <label>토요일</label><input type="number" id="time-6" value="240">
-                </div>
-                <div class="time-input text-danger">
-                    <label>일요일</label><input type="number" id="time-0" value="240">
-                </div>
+                <div class="time-input"><label>월</label><input type="number" id="time-1" value="120"></div>
+                <div class="time-input"><label>화</label><input type="number" id="time-2" value="120"></div>
+                <div class="time-input"><label>수</label><input type="number" id="time-3" value="120"></div>
+                <div class="time-input"><label>목</label><input type="number" id="time-4" value="120"></div>
+                <div class="time-input"><label>금</label><input type="number" id="time-5" value="120"></div>
+                <div class="time-input" style="background:#EEF2FF;"><label style="color:#4F46E5">토</label><input type="number" id="time-6" value="240"></div>
+                <div class="time-input" style="background:#FFF1F2;"><label style="color:#E11D48">일</label><input type="number" id="time-0" value="240"></div>
             </div>
         </div>
 
         <div class="card">
-            <h2>📚 새 강의 및 과목 기간 입력</h2>
-            <input type="text" id="subject" placeholder="과목명 (예: 공학수학, 회로이론)">
-            <input type="text" id="lecture" placeholder="강의명 (예: 1강 벡터, 2강 행렬)">
-            <input type="number" id="duration" placeholder="강의 시간 (분 단위)">
-            
-            <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
-                <label class="setting-label">📅 이 과목의 공부 시작일</label>
-                <input type="date" id="startDate">
-                <label class="setting-label">📅 이 과목의 공부 마감일</label>
-                <input type="date" id="endDate">
+            <h2>📚 과목 및 기간 설정</h2>
+            <div class="form-group">
+                <label>과목명</label>
+                <input type="text" id="subject" placeholder="예: 미적분학, 알고리즘">
             </div>
-            
-            <button class="btn-add" onclick="addLecture()" style="margin-top: 10px;">목록에 담기 🛒</button>
+            <div class="form-group">
+                <label>강의 정보</label>
+                <input type="text" id="lecture" placeholder="예: 1강 벡터, 2강 행렬">
+            </div>
+            <div class="form-group">
+                <label>소요 시간 (분)</label>
+                <input type="number" id="duration" placeholder="분 단위 입력">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>시작일</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label>종료일</label>
+                    <input type="date" id="endDate">
+                </div>
+            </div>
+            <button class="btn-add" onclick="addLecture()">장바구니에 담기</button>
         </div>
 
         <div class="card">
-            <h2>🛒 현재 담긴 강의 목록</h2>
-            <div id="cartList" class="list-box">아직 담긴 강의가 없습니다.</div>
-            <button class="btn-generate" onclick="generateAndSave()" style="margin-top: 20px;">지능형 자동 스케줄 짜기 & 저장 🚀</button>
+            <h2>🛒 대기 중인 강의 목록</h2>
+            <div id="cartList" class="list-box">목록이 비어있습니다.</div>
+            <button class="btn-generate" onclick="generateAndSave()">지능형 스케줄 자동 생성 🚀</button>
         </div>
     </div>
 

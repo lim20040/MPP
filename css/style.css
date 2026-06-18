@@ -1,66 +1,130 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-/* 기본 배경 및 폰트 */
+:root {
+    --primary: #4F46E5; /* 세련된 인디고 블루 */
+    --primary-hover: #4338CA;
+    --bg: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
 body {
     font-family: 'Pretendard', sans-serif;
-    background-color: #f4f7f6;
+    background-color: var(--bg);
     margin: 0; padding: 0;
-    color: #333;
+    color: var(--text-main);
+    line-height: 1.6;
 }
 
-/* 상단 네비게이션(메뉴바) */
+/* --- 상단 네비게이션 --- */
 .navbar {
-    background-color: white; padding: 15px 30px; display: flex; 
-    justify-content: space-between; align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+    background: var(--card-bg);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
 }
-.nav-logo { font-size: 20px; font-weight: bold; color: #333; text-decoration: none; }
+.nav-logo {
+    font-size: 1.25rem; font-weight: 800; color: var(--primary);
+    text-decoration: none; display: flex; align-items: center; gap: 8px;
+}
 .nav-links a {
-    text-decoration: none; color: #666; font-weight: 500; margin-left: 20px; padding: 8px 12px; border-radius: 6px;
+    text-decoration: none; color: var(--text-muted);
+    font-weight: 600; margin-left: 1rem; padding: 0.5rem 1rem;
+    border-radius: 8px; transition: 0.2s; font-size: 0.95rem;
 }
-.nav-links a:hover { background-color: #f0f4f8; color: #007bff; }
-.nav-links a.active { background-color: #e6f2ff; color: #007bff; font-weight: bold; }
+.nav-links a:hover { color: var(--primary); background: #F1F5F9; }
+.nav-links a.active { color: var(--primary); background: #EEF2FF; }
 
-/* 메인 구역 및 하얀색 카드 상자 */
+/* --- 메인 컨테이너 --- */
 .main-container {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    max-width: 1300px; margin: 0 auto; justify-content: center;
-    padding: 0 20px 50px 20px;
+    max-width: 1200px; margin: 2.5rem auto;
+    padding: 0 1.5rem; display: grid;
+    grid-template-columns: 1fr 1fr; /* 2열 배치 */
+    gap: 2rem;
 }
+
+/* 요일 설정 카드는 상단에 길게 배치 */
+.full-width { grid-column: 1 / -1; }
+
 .card {
-    background: white; padding: 25px; border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    flex: 1; min-width: 300px; max-width: 400px;
+    background: var(--card-bg);
+    padding: 2rem; border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
-h2 { font-size: 18px; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; }
+.card h2 {
+    font-size: 1.1rem; font-weight: 700; margin-top: 0;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;
+    color: var(--text-main); border-bottom: none; padding: 0;
+}
 
-/* 입력창 및 버튼 */
+/* --- 입력 폼 스타일 --- */
+.form-group { margin-bottom: 1.25rem; }
+.form-group label {
+    display: block; font-size: 0.85rem; font-weight: 600;
+    color: var(--text-muted); margin-bottom: 0.5rem;
+}
 input {
-    width: 100%; padding: 12px; margin-bottom: 10px;
-    border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px;
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 0.95rem; transition: 0.2s; box-sizing: border-box;
+    background: #F9FAFB;
 }
-button {
-    width: 100%; padding: 14px; border: none; border-radius: 6px;
-    font-size: 15px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s;
+input:focus {
+    outline: none; border-color: var(--primary);
+    background: #FFF; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
-.btn-add { background-color: #6c757d; }
-.btn-add:hover { background-color: #5a6268; }
-.btn-generate { background-color: #007bff; margin-top: 10px;}
-.btn-generate:hover { background-color: #0056b3; }
 
-/* 목록 및 스케줄 텍스트 */
-.list-box, .schedule-box { max-height: 400px; overflow-y: auto; font-size: 14px;}
-.item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-.subject-tag { background: #eef2f5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #007bff;}
-.day-title { color: white; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
-.setting-label { display: block; font-weight: bold; color: #555; margin-bottom: 5px; font-size: 14px; margin-top: 10px;}
-
-/* 요일별 설정창 가로 배열 */
+/* --- 요일별 시간 설정 UI --- */
 .week-settings {
-    display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; margin-top: 15px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px;
 }
-.time-input { flex: 1; min-width: 80px; text-align: center; }
-.time-input label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
-.time-input input { text-align: center; padding: 8px; }
-.text-primary label { color: #007bff; }
-.text-danger label { color: #dc3545; }
+.time-input {
+    background: #F8FAFC; padding: 1rem 0.5rem; border-radius: 12px;
+    border: 1px solid var(--border);
+}
+.time-input label { font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted); }
+.time-input input { 
+    border: none; background: transparent; font-size: 1.1rem; 
+    font-weight: 700; color: var(--primary); text-align: center; padding: 0;
+}
+
+/* --- 버튼 디자인 --- */
+button {
+    width: 100%; padding: 0.875rem; border-radius: 10px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: 0.2s; border: none;
+}
+.btn-add { background: #64748B; color: white; }
+.btn-add:hover { background: #475569; }
+.btn-generate { background: var(--primary); color: white; margin-top: 1.5rem; }
+.btn-generate:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+/* --- 목록 및 스케줄 아이템 --- */
+.item-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem; background: #F8FAFC; border-radius: 10px;
+    margin-bottom: 0.75rem; border: 1px solid var(--border);
+}
+.subject-tag {
+    background: var(--primary); color: white;
+    padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;
+    font-weight: 700; margin-right: 8px;
+}
+.day-title {
+    font-size: 1rem; font-weight: 800; color: var(--text-main);
+    margin: 2rem 0 1rem 0; padding-left: 0.5rem;
+    border-left: 4px solid var(--primary);
+}
+
+/* 반응형: 화면 작아지면 1열로 */
+@media (max-width: 900px) {
+    .main-container { grid-template-columns: 1fr; }
+    .week-settings { grid-template-columns: repeat(4, 1fr); }
+}
