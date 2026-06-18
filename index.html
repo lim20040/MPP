@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>MPP - My Personal Planner</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>MPP 스케줄러</h1>
-    <input type="text" id="taskTitle" placeholder="강의명">
-    <input type="number" id="taskTime" placeholder="시간(분)">
-    <button onclick="saveTask()">저장하기</button>
+    <div class="container">
+        <h1>📅 MPP 스케줄러</h1>
+        <p>오늘의 강의 일정을 추가하세요</p>
+        
+        <div class="input-group">
+            <input type="text" id="taskTitle" placeholder="강의명 (예: 미적분학 복습)">
+            <input type="number" id="taskTime" placeholder="시간 (분 단위)">
+        </div>
+        
+        <button onclick="saveTask()">저장하기</button>
+    </div>
+
     <script src="js/app.js"></script>
 </body>
 </html>
