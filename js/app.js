@@ -1,29 +1,49 @@
 let cart = [];
 
-// [페이지 로딩 시 작동] 날짜 기본값 오늘로 세팅 & 화면 데이터 불러오기
 window.onload = () => {
     if (document.getElementById('startDate')) {
-        // input.html 페이지일 때 날짜 기본값을 오늘로 설정
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+        
+        // 이전에 세팅한 요일별 공부시간이 있다면 브라우저에 저장해두고 불러옵니다.
+        loadWeekSettings();
     }
     if (document.getElementById('scheduleResult')) {
-        // index.html 페이지일 때 DB에서 데이터 불러오기
         loadSchedule();
     }
 };
 
-// 1. 담기 기능
+// 요일별 설정값 로컬 저장소 저장/불러오기
+function saveWeekSettings() {
+    for(let i=0; i<7; i++) {
+        localStorage.setItem(`mpp_time_${i}`, document.getElementById(`time-${i}`).value);
+    }
+}
+function loadWeekSettings() {
+    for(let i=0; i<7; i++) {
+        const saved = localStorage.getItem(`mpp_time_${i}`);
+        if(saved) document.getElementById(`time-${i}`).value = saved;
+    }
+}
+
+// 1. 강의 담기 (과목별 날짜 범위를 포함하여 저장)
 function addLecture() {
     const subject = document.getElementById('subject').value;
     const lecture = document.getElementById('lecture').value;
     const duration = parseInt(document.getElementById('duration').value);
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
 
-    if(!subject || !lecture || !duration) return alert("빈칸을 모두 채워주세요!");
+    if(!subject || !lecture || !duration || !startDate || !endDate) {
+        return alert("모든 빈칸과 과목 기간을 입력해주세요!");
+    }
 
-    cart.push({ subject, lecture, duration });
+    cart.push({ subject, lecture, duration, startDate, endDate });
     renderCart();
+    saveWeekSettings(); // 담을 때 요일별 시간 세팅도 기억
 
+    // 편의를 위해 강의명과 시간만 리셋 (과목명과 기간은 유지되므로 연속 입력 편리)
     document.getElementById('lecture').value = '';
     document.getElementById('duration').value = '';
 }
@@ -36,45 +56,76 @@ function renderCart() {
     cart.forEach((lec) => {
         html += `<div class="item-row">
             <span><span class="subject-tag">${lec.subject}</span> ${lec.lecture}</span>
-            <span>${lec.duration}분</span>
+            <span>${lec.duration}분 (${lec.startDate}~${lec.endDate})</span>
         </div>`;
     });
     box.innerHTML = html;
 }
 
-// [핵심] 2. 실제 날짜 기반 자동 스케줄 짜기
+// [★초강력 핵심 알고리즘★] 요일별 가용시간 + 과목별 기간 고려한 지능형 분배
 async function generateAndSave() {
-    const dailyLimit = parseInt(document.getElementById('dailyLimit').value);
-    const startDateValue = document.getElementById('startDate').value;
-    
     if(cart.length === 0) return alert("먼저 강의를 목록에 담아주세요!");
-    if(!startDateValue) return alert("시작 날짜를 선택해주세요!");
 
-    let currentAssignDate = new Date(startDateValue);
-    let todayUsed = 0;
+    // 1. 요일별 제한 시간 불러오기 (0:일, 1:월, ... 6:토)
+    const weekLimits = {};
+    for(let i=0; i<7; i++) {
+        weekLimits[i] = parseInt(document.getElementById(`time-${i}`).value) || 0;
+    }
+
+    // 2. 날짜별 총 잔여시간을 관리할 글로벌 캘린더 생성
+    let globalCalendar = {}; 
     let finalSchedule = [];
-
-    // 요일 한글 변환 배열
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
+    // 3. 담긴 강의들을 하나씩 최적의 날짜에 배치
     cart.forEach(lec => {
-        // 남은 시간 부족하면 다음 날로 넘기기
-        if (todayUsed + lec.duration > dailyLimit && todayUsed > 0) {
-            currentAssignDate.setDate(currentAssignDate.getDate() + 1); // 하루 추가
-            todayUsed = 0;
-        }
+        let allocated = false;
         
-        // 날짜 예쁘게 만들기 (예: 2026-06-19 (금))
-        const y = currentAssignDate.getFullYear();
-        const m = String(currentAssignDate.getMonth() + 1).padStart(2, '0');
-        const d = String(currentAssignDate.getDate()).padStart(2, '0');
-        const dayStr = dayNames[currentAssignDate.getDay()];
-        const formattedDate = `${y}-${m}-${d} (${dayStr})`;
+        // 시차 오류를 방지하기 위해 날짜 문자열을 안전하게 파싱하여 Date 객체 생성
+        const [sY, sM, sD] = lec.startDate.split('-').map(Number);
+        const [eY, eM, eD] = lec.endDate.split('-').map(Number);
+        
+        let current = new Date(sY, sM - 1, sD);
+        const end = new Date(eY, eM - 1, eD);
 
-        finalSchedule.push({ ...lec, assigned_date: formattedDate });
-        todayUsed += lec.duration;
+        // 설정한 과목 시작일부터 마감일까지 하루씩 전진하며 들어갈 자리가 있는지 탐색
+        while (current <= end) {
+            // 날짜 키 생성 (예: 2026-06-19)
+            const y = current.getFullYear();
+            const m = String(current.getMonth() + 1).padStart(2, '0');
+            const d = String(current.getDate()).padStart(2, '0');
+            const dateKey = `${y}-${m}-${d}`;
+            
+            const dayOfWeek = current.getDay(); // 요일 숫자 (0~6)
+            const totalLimitForDay = weekLimits[dayOfWeek]; // 해당 요일의 총 학습 가능시간
+
+            // 만약 해당 날짜에 처음 일정을 배치하는 거라면 요일 한도만큼 초기화
+            if (!globalCalendar[dateKey]) {
+                globalCalendar[dateKey] = totalLimitForDay;
+            }
+
+            // 오늘 공부할 수 있는 남은 시간이 이 강의 시간보다 넉넉하다면? 배치 확정!
+            if (globalCalendar[dateKey] >= lec.duration) {
+                globalCalendar[dateKey] -= lec.duration; // 시간 차감
+                
+                const formattedDate = `${dateKey} (${dayNames[dayOfWeek]})`;
+                finalSchedule.push({ ...lec, assigned_date: formattedDate });
+                allocated = true;
+                break; // 배치 성공했으므로 다음 강의로 넘어감
+            }
+
+            // 자리가 없으면 하루 뒤로 이동해서 다시 체크
+            current.setDate(current.getDate() + 1);
+        }
+
+        // 만약 마감일까지 시간이 모자라 어디에도 배치되지 못했다면, 어쩔 수 없이 마감일에 강제 배정
+        if (!allocated) {
+            const formattedDate = `${lec.endDate} (${dayNames[end.getDay()]})`;
+            finalSchedule.push({ ...lec, assigned_date: formattedDate });
+        }
     });
 
+    // 4. 생성된 똑똑한 스케줄을 데이터베이스로 전송
     const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,18 +133,19 @@ async function generateAndSave() {
     });
 
     if(res.ok) {
-        alert("성공적으로 분배되었습니다! 내 스케줄 페이지로 이동합니다.");
-        window.location.href = 'index.html'; // 저장 완료 시 메인 페이지로 자동 이동
+        alert("과목별 일치 날짜 및 요일별 시간 한도를 고려하여 최적의 계획이 수립되었습니다!");
+        cart = [];
+        window.location.href = 'index.html';
     }
 }
 
-// 3. 스케줄 불러오기
+// 4. 결과 불러오기 (index.html 전용)
 async function loadSchedule() {
     const res = await fetch('/api/tasks');
     const data = await res.json();
     
     const box = document.getElementById('scheduleResult');
-    if(data.length === 0) return box.innerHTML = "저장된 스케줄이 없습니다.";
+    if(data.length === 0) return box.innerHTML = "저장된 스케줄이 없습니다. '새 강의 입력' 메뉴에서 일정을 생성해주세요.";
 
     let html = '';
     let currentDate = '';
@@ -101,12 +153,11 @@ async function loadSchedule() {
     data.forEach(task => {
         if(task.assigned_date !== currentDate) {
             currentDate = task.assigned_date;
-            // 날짜 구분선
-            html += `<div class="day-title" style="background: #343a40;">${currentDate}</div>`;
+            html += `<div class="day-title" style="background: #212529;">📅 ${currentDate}</div>`;
         }
-        html += `<div class="item-row" style="padding-left: 10px;">
-            <span><span class="subject-tag">${task.subject}</span> ${task.lecture}</span>
-            <span>${task.duration}분</span>
+        html += `<div class="item-row" style="padding-left: 15px;">
+            <span><span class="subject-tag">${task.subject}</span> <b>${task.lecture}</b></span>
+            <span>⏱️ ${task.duration}분</span>
         </div>`;
     });
     box.innerHTML = html;
