@@ -487,7 +487,8 @@ function createBalancedSchedule(lectures, weekLimits) {
                 endDate: lec.endDate,
                 order: index,
                 pointer: 0,
-                lectures: []
+                lectures: [],
+                idealDates: []
             });
         }
 
@@ -518,15 +519,33 @@ function createBalancedSchedule(lectures, weekLimits) {
     }, groups[0].endDate);
 
     const dateKeys = getDateRange(minStartDate, maxEndDate);
+
     const remainingCapacity = {};
+    const originalCapacity = {};
 
     dateKeys.forEach(dateKey => {
         const dayIndex = getDayIndex(dateKey);
-        remainingCapacity[dateKey] = weekLimits[dayIndex] || 0;
+        const capacity = weekLimits[dayIndex] || 0;
+
+        remainingCapacity[dateKey] = capacity;
+        originalCapacity[dateKey] = capacity;
     });
 
-    const finalSchedule = [];
-    const recentSubjects = [];
+    function getStudyDatesForGroup(group) {
+        return dateKeys.filter(dateKey => {
+            return (
+                dateKey >= group.startDate &&
+                dateKey <= group.endDate &&
+                originalCapacity[dateKey] > 0
+            );
+        });
+    }
+
+    function getDateDistance(a, b) {
+        const dateA = parseLocalDate(a);
+        const dateB = parseLocalDate(b);
+        return Math.floor((dateA.getTime() - dateB.getTime()) / (1000 * 60 * 60 * 24));
+    }
 
     function groupHasRemaining(group) {
         return group.pointer < group.lectures.length;
@@ -546,7 +565,7 @@ function createBalancedSchedule(lectures, weekLimits) {
         return total;
     }
 
-    function getFutureCapacityForGroup(group, fromDateKey) {
+    function getRemainingCapacityForGroup(group, fromDateKey) {
         let total = 0;
 
         dateKeys.forEach(dateKey => {
@@ -570,26 +589,45 @@ function createBalancedSchedule(lectures, weekLimits) {
         return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
     }
 
-    function calculatePriority(group, dateKey) {
-        const remainingDuration = getRemainingDuration(group);
-        const futureCapacity = getFutureCapacityForGroup(group, dateKey);
-        const daysLeft = getDaysLeft(group, dateKey);
+    // 핵심 1: 각 과목의 강의마다 "이쯤에 들어가야 하는 목표 날짜"를 먼저 만든다.
+    groups.forEach(group => {
+        const studyDates = getStudyDatesForGroup(group);
 
-        let priority = 0;
-
-        priority += remainingDuration / Math.max(futureCapacity, 1) * 100;
-        priority += 30 / (daysLeft + 1);
-
-        const sameSubjectCount = recentSubjects.filter(subject => subject === group.subject).length;
-        priority -= sameSubjectCount * 18;
-
-        if (dateKey === group.endDate) {
-            priority += 80;
+        if (studyDates.length === 0) {
+            group.idealDates = group.lectures.map(() => group.endDate);
+            return;
         }
 
-        return priority;
-    }
+        const totalDuration = group.lectures.reduce((sum, lec) => {
+            return sum + lec.duration;
+        }, 0);
 
+        let accumulated = 0;
+
+        group.lectures.forEach(lec => {
+            const centerPoint = accumulated + lec.duration / 2;
+            const ratio = totalDuration === 0 ? 0 : centerPoint / totalDuration;
+
+            let idealIndex = Math.floor(ratio * studyDates.length);
+
+            if (idealIndex < 0) idealIndex = 0;
+            if (idealIndex >= studyDates.length) idealIndex = studyDates.length - 1;
+
+            group.idealDates.push(studyDates[idealIndex]);
+
+            accumulated += lec.duration;
+        });
+    });
+
+    const finalSchedule = [];
+    const assignedByDateSubject = {};
+
+    dateKeys.forEach(dateKey => {
+        assignedByDateSubject[dateKey] = {};
+    });
+
+    // 핵심 2: 날짜별로 돌면서, 목표 날짜가 된 강의만 배치한다.
+    // 즉, 미래에 들어갈 강의를 너무 앞당겨서 오늘에 몰아넣지 않는다.
     dateKeys.forEach(dateKey => {
         let safety = 0;
 
@@ -603,15 +641,64 @@ function createBalancedSchedule(lectures, weekLimits) {
                     if (dateKey > group.endDate) return false;
 
                     const nextLecture = getNextLecture(group);
+                    const idealDate = group.idealDates[group.pointer];
 
-                    return nextLecture.duration <= remainingCapacity[dateKey];
+                    if (!idealDate) return false;
+
+                    // 아직 목표 날짜가 안 된 강의는 미리 당겨 넣지 않는다.
+                    if (idealDate > dateKey) return false;
+
+                    // 하루 가능 시간보다 큰 강의는 여기서 못 넣는다.
+                    if (nextLecture.duration > remainingCapacity[dateKey]) return false;
+
+                    return true;
                 })
-                .map(group => ({
-                    group,
-                    priority: calculatePriority(group, dateKey)
-                }))
+                .map(group => {
+                    const nextLecture = getNextLecture(group);
+                    const idealDate = group.idealDates[group.pointer];
+
+                    const daysAfterIdeal = Math.max(0, getDateDistance(dateKey, idealDate));
+                    const daysLeft = getDaysLeft(group, dateKey);
+                    const remainingDuration = getRemainingDuration(group);
+                    const remainingCapacityForGroup = getRemainingCapacityForGroup(group, dateKey);
+
+                    const alreadySameSubjectToday = assignedByDateSubject[dateKey][group.subject] || 0;
+
+                    let priority = 0;
+
+                    // 목표 날짜보다 밀린 강의는 강하게 우선
+                    priority += daysAfterIdeal * 120;
+
+                    // 마감이 가까울수록 우선
+                    priority += 80 / (daysLeft + 1);
+
+                    // 남은 기간 대비 분량이 빡빡할수록 우선
+                    priority += remainingDuration / Math.max(remainingCapacityForGroup, 1) * 100;
+
+                    // 마감일 당일이면 강하게 우선
+                    if (dateKey === group.endDate) {
+                        priority += 300;
+                    }
+
+                    // 같은 날 같은 과목이 이미 들어갔으면 강하게 감점
+                    // 이게 한 날짜에 한 과목이 몰리는 걸 막는 핵심
+                    priority -= alreadySameSubjectToday * 500;
+
+                    // 그래도 너무 늦은 과목은 살려야 하므로 마감 임박이면 감점 완화
+                    if (daysLeft <= 1) {
+                        priority += alreadySameSubjectToday * 250;
+                    }
+
+                    return {
+                        group,
+                        lecture: nextLecture,
+                        priority
+                    };
+                })
                 .sort((a, b) => {
-                    if (b.priority !== a.priority) return b.priority - a.priority;
+                    if (b.priority !== a.priority) {
+                        return b.priority - a.priority;
+                    }
 
                     if (a.group.endDate !== b.group.endDate) {
                         return a.group.endDate.localeCompare(b.group.endDate);
@@ -624,8 +711,9 @@ function createBalancedSchedule(lectures, weekLimits) {
                 break;
             }
 
-            const chosenGroup = candidates[0].group;
-            const chosenLecture = getNextLecture(chosenGroup);
+            const chosen = candidates[0];
+            const chosenGroup = chosen.group;
+            const chosenLecture = chosen.lecture;
 
             finalSchedule.push({
                 subject: chosenLecture.subject,
@@ -637,11 +725,8 @@ function createBalancedSchedule(lectures, weekLimits) {
             remainingCapacity[dateKey] -= chosenLecture.duration;
             chosenGroup.pointer++;
 
-            recentSubjects.push(chosenGroup.subject);
-
-            if (recentSubjects.length > 4) {
-                recentSubjects.shift();
-            }
+            assignedByDateSubject[dateKey][chosenGroup.subject] =
+                (assignedByDateSubject[dateKey][chosenGroup.subject] || 0) + 1;
         }
     });
 
