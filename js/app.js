@@ -2,14 +2,14 @@ let cart = [];
 let bulkLectureData = [];
 
 // 페이지 로딩 시 작동
-window.onload = () => {
+window.onload = async () => {
     const today = new Date().toISOString().split('T')[0];
 
     if (document.getElementById('startDate')) {
         document.getElementById('startDate').value = today;
         document.getElementById('endDate').value = today;
 
-        loadWeekSettings();
+        await loadWeekSettingsFromDB();
 
         document.querySelectorAll('.bulk-start-date, .bulk-end-date').forEach(input => {
             input.value = today;
@@ -21,25 +21,66 @@ window.onload = () => {
     }
 };
 
-// --- 요일별 설정 로컬 저장/불러오기 ---
-function saveWeekSettings() {
+// --- 요일별 설정 DB 저장/불러오기 ---
+async function saveWeekSettingsToDB() {
+    const weekSettings = {};
+
     for (let i = 0; i < 7; i++) {
         const input = document.getElementById(`time-${i}`);
+        const value = parseInt(input.value) || 0;
 
-        if (input) {
-            localStorage.setItem(`mpp_time_${i}`, input.value);
+        if (value < 0) {
+            return alert("요일별 가능 시간은 0분 이상이어야 합니다.");
         }
+
+        weekSettings[i] = value;
+    }
+
+    try {
+        const res = await fetch('/api/week-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ weekSettings })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            alert(`요일별 시간 저장 실패: ${result.error || '알 수 없는 오류'}`);
+            return;
+        }
+
+        alert("요일별 가능 시간이 저장되었습니다.");
+
+    } catch (error) {
+        console.error(error);
+        alert("요일별 가능 시간 저장 중 오류가 발생했습니다.");
     }
 }
 
-function loadWeekSettings() {
-    for (let i = 0; i < 7; i++) {
-        const input = document.getElementById(`time-${i}`);
-        const saved = localStorage.getItem(`mpp_time_${i}`);
+async function loadWeekSettingsFromDB() {
+    try {
+        const res = await fetch('/api/week-settings');
 
-        if (input && saved) {
-            input.value = saved;
+        if (!res.ok) {
+            console.error("요일별 시간 불러오기 실패");
+            return;
         }
+
+        const data = await res.json();
+
+        data.forEach(item => {
+            const input = document.getElementById(`time-${item.day_index}`);
+
+            if (input) {
+                input.value = item.minutes;
+            }
+        });
+
+    } catch (error) {
+        console.error("요일별 시간 불러오기 오류:", error);
     }
 }
 
@@ -72,7 +113,6 @@ function addLecture() {
     });
 
     renderCart();
-    saveWeekSettings();
 
     document.getElementById('lecture').value = '';
     document.getElementById('duration').value = '';
@@ -138,35 +178,38 @@ function expandSubjectBulkInputs() {
 
     bulkLectureData = [];
     let html = '';
+    let hasError = false;
 
     rows.forEach((row, rowIndex) => {
+        if (hasError) return;
+
         const subject = row.querySelector('.bulk-subject').value.trim();
         const start = parseInt(row.querySelector('.bulk-start').value);
         const end = parseInt(row.querySelector('.bulk-end').value);
         const startDate = row.querySelector('.bulk-start-date').value;
         const endDate = row.querySelector('.bulk-end-date').value;
 
-        if (!subject && isNaN(start) && isNaN(end) && !startDate && !endDate) {
-            return;
-        }
-
         if (!subject || isNaN(start) || isNaN(end) || !startDate || !endDate) {
             alert(`${rowIndex + 1}번째 과목의 과목명, 시작 강, 끝 강, 시작일, 종료일을 모두 입력해주세요.`);
+            hasError = true;
             return;
         }
 
         if (start <= 0 || end <= 0) {
             alert(`${subject}의 시작 강과 끝 강은 1 이상이어야 합니다.`);
+            hasError = true;
             return;
         }
 
         if (start > end) {
             alert(`${subject}의 시작 강은 끝 강보다 클 수 없습니다.`);
+            hasError = true;
             return;
         }
 
         if (startDate > endDate) {
             alert(`${subject}의 시작일은 종료일보다 늦을 수 없습니다.`);
+            hasError = true;
             return;
         }
 
@@ -203,6 +246,8 @@ function expandSubjectBulkInputs() {
         `;
     });
 
+    if (hasError) return;
+
     if (bulkLectureData.length === 0) {
         return alert("과목명, 시작 강, 끝 강, 시작일, 종료일을 올바르게 입력해주세요.");
     }
@@ -238,7 +283,6 @@ function addExpandedLectures() {
     }
 
     renderCart();
-    saveWeekSettings();
 
     document.getElementById('bulkExpandedArea').style.display = 'none';
     document.getElementById('btnConfirmBulk').style.display = 'none';
@@ -317,7 +361,7 @@ function removeCartItem(index) {
 // --- 7. 지능형 스케줄 자동 생성 및 저장 ---
 async function generateAndSave() {
     if (cart.length === 0) {
-        return alert("먼저 강의를 목록에 담아주세요!");
+        return alert("장바구니가 비어있습니다. 먼저 강의를 장바구니에 담아주세요.");
     }
 
     const weekLimits = {};
@@ -354,7 +398,7 @@ async function generateAndSave() {
             const dayOfWeek = current.getDay();
             const totalLimitForDay = weekLimits[dayOfWeek];
 
-            if (!globalCalendar[dateKey]) {
+            if (globalCalendar[dateKey] === undefined) {
                 globalCalendar[dateKey] = totalLimitForDay;
             }
 
@@ -398,16 +442,20 @@ async function generateAndSave() {
             body: JSON.stringify({ schedule: finalSchedule })
         });
 
-        if (res.ok) {
-            alert("과목별 기간 및 요일별 시간을 고려하여 계획이 수립되었습니다!");
-            cart = [];
-            window.location.href = 'index.html';
-        } else {
-            alert("저장 중 오류가 발생했습니다.");
+        const resultText = await res.text();
+
+        if (!res.ok) {
+            alert(`저장 실패: 서버 응답 코드 ${res.status}\n${resultText}`);
+            return;
         }
+
+        alert("스케줄이 저장되었습니다.");
+        cart = [];
+        window.location.href = 'index.html';
+
     } catch (error) {
-        console.error(error);
-        alert("서버와 연결하는 중 오류가 발생했습니다.");
+        console.error("저장 오류:", error);
+        alert("스케줄 저장 중 오류가 발생했습니다.");
     }
 }
 
@@ -447,8 +495,14 @@ async function loadSchedule() {
         });
 
         box.innerHTML = html;
+
     } catch (error) {
         console.error(error);
-        document.getElementById('scheduleResult').innerHTML = "스케줄을 불러오는 중 오류가 발생했습니다.";
+
+        const box = document.getElementById('scheduleResult');
+
+        if (box) {
+            box.innerHTML = "스케줄을 불러오는 중 오류가 발생했습니다.";
+        }
     }
 }

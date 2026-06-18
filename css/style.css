@@ -20,7 +20,6 @@ body {
     line-height: 1.6;
 }
 
-/* --- 상단 네비게이션 --- */
 .navbar {
     background: var(--card-bg);
     padding: 1rem 2rem;
@@ -64,7 +63,6 @@ body {
     background: #EEF2FF;
 }
 
-/* --- 입력 페이지 컨테이너 --- */
 .main-container {
     max-width: 1200px;
     margin: 2.5rem auto;
@@ -78,7 +76,6 @@ body {
     grid-column: 1 / -1;
 }
 
-/* --- 스케줄 페이지 가운데 정렬 --- */
 .schedule-container {
     max-width: 800px;
     margin: 2.5rem auto;
@@ -91,7 +88,6 @@ body {
     width: 100%;
 }
 
-/* --- 카드 --- */
 .card {
     background: var(--card-bg);
     padding: 2rem;
@@ -109,11 +105,8 @@ body {
     align-items: center;
     gap: 10px;
     color: var(--text-main);
-    border-bottom: none;
-    padding: 0;
 }
 
-/* --- 기본 입력 폼 --- */
 .form-group {
     margin-bottom: 1.25rem;
 }
@@ -144,7 +137,6 @@ input:focus {
     box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
-/* --- 요일별 시간 설정 --- */
 .week-settings {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -176,7 +168,6 @@ input:focus {
     padding: 0;
 }
 
-/* --- 버튼 --- */
 button {
     width: 100%;
     padding: 0.875rem;
@@ -220,7 +211,6 @@ button {
     color: white;
 }
 
-/* --- 과목별 일괄 입력 --- */
 .subject-bulk-box {
     background: #F8FAFC;
     padding: 18px;
@@ -319,7 +309,6 @@ button {
     background: white;
 }
 
-/* --- 목록 및 스케줄 아이템 --- */
 .item-row {
     display: flex;
     justify-content: space-between;
@@ -355,7 +344,6 @@ button {
     overflow-y: auto;
 }
 
-/* --- 반응형 --- */
 @media (max-width: 900px) {
     .main-container {
         grid-template-columns: 1fr;
