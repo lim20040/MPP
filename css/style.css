@@ -462,3 +462,249 @@ button {
 .subject-plan-actions button.danger {
     background: #EF4444;
 }
+.calendar-page-container {
+    max-width: 1400px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+}
+
+.calendar-card {
+    width: 100%;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-header h2 {
+    margin: 0;
+}
+
+.calendar-nav-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background: #EEF2FF;
+    color: var(--primary);
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.calendar-box {
+    width: 100%;
+}
+
+.calendar-week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-week-head {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+.calendar-week-head div {
+    padding: 0.8rem;
+    text-align: center;
+    font-weight: 800;
+    color: var(--text-muted);
+    border-right: 1px solid var(--border);
+}
+
+.calendar-week-head div:last-child {
+    border-right: none;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.calendar-day {
+    min-height: 155px;
+    background: white;
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    padding: 0.65rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.calendar-day.empty {
+    background: #F8FAFC;
+}
+
+.calendar-day.has-task {
+    background: #FCFCFF;
+}
+
+.calendar-day-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.45rem;
+}
+
+.calendar-date-num {
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.calendar-total {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: #EEF2FF;
+    border-radius: 999px;
+    padding: 2px 7px;
+}
+
+.calendar-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.calendar-task {
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
+    border-radius: 8px;
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.calendar-task-subject {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-task-lecture {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.calendar-task-duration {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.empty-box {
+    background: #F8FAFC;
+    border: 1px dashed #CBD5E1;
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.bulk-expanded-subject {
+    margin-top: 15px;
+    padding: 14px;
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+}
+
+.bulk-expanded-title {
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.subject-plan-card {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.subject-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.subject-plan-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.subject-plan-meta {
+    margin-top: 0.7rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.subject-plan-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.8rem;
+}
+
+.subject-plan-preview span {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    color: var(--text-main);
+}
+
+.subject-plan-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 0.9rem;
+}
+
+.subject-plan-actions button {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+    background: var(--primary);
+    color: white;
+}
+
+.subject-plan-actions button.danger {
+    background: #EF4444;
+}
+
+@media (max-width: 900px) {
+    .calendar-page-container {
+        padding: 0 0.75rem;
+    }
+
+    .calendar-day {
+        min-height: 120px;
+        padding: 0.45rem;
+    }
+
+    .calendar-task {
+        padding: 4px;
+    }
+
+    .calendar-task-duration {
+        display: none;
+    }
+}

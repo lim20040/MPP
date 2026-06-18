@@ -2,7 +2,7 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-async function initSubjectTable() {
+async function initTables() {
     await sql`
         CREATE TABLE IF NOT EXISTS mpp_subject_plans (
             id SERIAL PRIMARY KEY,
@@ -15,13 +15,123 @@ async function initSubjectTable() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `;
+
+    await sql`
+        CREATE TABLE IF NOT EXISTS mpp_schedule (
+            id SERIAL PRIMARY KEY,
+            subject TEXT,
+            lecture TEXT,
+            duration INT,
+            assigned_date TEXT
+        )
+    `;
+}
+
+function extractDateOnly(assignedDate) {
+    if (!assignedDate) return '';
+    return String(assignedDate).slice(0, 10);
+}
+
+function extractLectureNumber(lecture) {
+    const match = String(lecture || '').match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+}
+
+async function migrateScheduleToSubjectsIfEmpty() {
+    const existingSubjects = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM mpp_subject_plans
+    `;
+
+    if (existingSubjects[0].count > 0) {
+        return;
+    }
+
+    const oldSchedule = await sql`
+        SELECT subject, lecture, duration, assigned_date
+        FROM mpp_schedule
+        ORDER BY subject ASC, id ASC
+    `;
+
+    if (oldSchedule.length === 0) {
+        return;
+    }
+
+    const grouped = new Map();
+
+    oldSchedule.forEach(item => {
+        const subject = item.subject || '이름 없는 과목';
+        const lectureNumber = extractLectureNumber(item.lecture);
+        const assignedDate = extractDateOnly(item.assigned_date);
+
+        if (!grouped.has(subject)) {
+            grouped.set(subject, {
+                subject,
+                startLecture: lectureNumber || 1,
+                endLecture: lectureNumber || 1,
+                startDate: assignedDate,
+                endDate: assignedDate,
+                lectures: []
+            });
+        }
+
+        const group = grouped.get(subject);
+
+        if (lectureNumber > 0) {
+            group.startLecture = Math.min(group.startLecture, lectureNumber);
+            group.endLecture = Math.max(group.endLecture, lectureNumber);
+        }
+
+        if (assignedDate) {
+            if (!group.startDate || assignedDate < group.startDate) {
+                group.startDate = assignedDate;
+            }
+
+            if (!group.endDate || assignedDate > group.endDate) {
+                group.endDate = assignedDate;
+            }
+        }
+
+        group.lectures.push({
+            lecture: item.lecture,
+            lectureNumber: lectureNumber,
+            duration: item.duration || 0
+        });
+    });
+
+    for (const group of grouped.values()) {
+        group.lectures.sort((a, b) => {
+            return a.lectureNumber - b.lectureNumber;
+        });
+
+        await sql`
+            INSERT INTO mpp_subject_plans (
+                subject,
+                start_lecture,
+                end_lecture,
+                start_date,
+                end_date,
+                lectures
+            )
+            VALUES (
+                ${group.subject},
+                ${group.startLecture},
+                ${group.endLecture},
+                ${group.startDate},
+                ${group.endDate},
+                ${JSON.stringify(group.lectures)}::jsonb
+            )
+        `;
+    }
 }
 
 export default async function handler(req, res) {
     try {
-        await initSubjectTable();
+        await initTables();
 
         if (req.method === 'GET') {
+            await migrateScheduleToSubjectsIfEmpty();
+
             const data = await sql`
                 SELECT *
                 FROM mpp_subject_plans
@@ -65,7 +175,7 @@ export default async function handler(req, res) {
                         end_lecture = ${endLecture},
                         start_date = ${startDate},
                         end_date = ${endDate},
-                        lectures = ${JSON.stringify(lectures)}
+                        lectures = ${JSON.stringify(lectures)}::jsonb
                     WHERE id = ${id}
                 `;
 
@@ -90,7 +200,7 @@ export default async function handler(req, res) {
                     ${endLecture},
                     ${startDate},
                     ${endDate},
-                    ${JSON.stringify(lectures)}
+                    ${JSON.stringify(lectures)}::jsonb
                 )
             `;
 

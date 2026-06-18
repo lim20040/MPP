@@ -14,10 +14,15 @@
         </div>
     </nav>
 
-    <div class="schedule-container">
-        <div class="card">
-            <h2>📆 나의 학습 달력 스케줄표</h2>
-            <div id="scheduleResult" class="schedule-box">
+    <div class="calendar-page-container">
+        <div class="card calendar-card">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" onclick="moveCalendarMonth(-1)">‹</button>
+                <h2 id="calendarTitle">📅 나의 학습 달력</h2>
+                <button class="calendar-nav-btn" onclick="moveCalendarMonth(1)">›</button>
+            </div>
+
+            <div id="scheduleResult" class="calendar-box">
                 불러오는 중...
             </div>
         </div>

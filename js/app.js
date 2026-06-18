@@ -1,7 +1,7 @@
 let subjectPlans = [];
+let loadedScheduleData = [];
 let calendarCurrentDate = new Date();
 
-// 페이지 로딩 시 작동
 window.onload = async () => {
     const today = new Date().toISOString().split('T')[0];
 
@@ -14,7 +14,7 @@ window.onload = async () => {
     }
 
     if (document.getElementById('scheduleResult')) {
-        loadSchedule();
+        await loadSchedule();
     }
 };
 
@@ -330,7 +330,7 @@ function editSubjectPlan(id) {
 
 // --- 과목 삭제 ---
 async function deleteSubjectPlan(id) {
-    const ok = confirm("이 과목만 삭제할까요? 다른 과목과 기존 스케줄표는 삭제되지 않습니다.");
+    const ok = confirm("이 과목만 삭제할까요? 기존 스케줄표는 삭제되지 않습니다.");
 
     if (!ok) return;
 
@@ -373,7 +373,7 @@ function resetSubjectForm() {
     document.getElementById('btnCancelEdit').style.display = 'none';
 }
 
-// --- 날짜 관련 도우미 함수 ---
+// --- 날짜 도우미 ---
 function parseLocalDate(dateString) {
     const [y, m, d] = dateString.split('-').map(Number);
     return new Date(y, m - 1, d);
@@ -414,7 +414,11 @@ function getDayName(dateKey) {
     return dayNames[getDayIndex(dateKey)];
 }
 
-// --- 과목별 균등 분배 스케줄 생성 ---
+function extractDateOnly(assignedDate) {
+    return String(assignedDate || '').slice(0, 10);
+}
+
+// --- 균등 분배 스케줄 생성 ---
 function createBalancedSchedule(lectures, weekLimits) {
     const groupsMap = new Map();
 
@@ -554,9 +558,11 @@ function createBalancedSchedule(lectures, weekLimits) {
                 }))
                 .sort((a, b) => {
                     if (b.priority !== a.priority) return b.priority - a.priority;
+
                     if (a.group.endDate !== b.group.endDate) {
                         return a.group.endDate.localeCompare(b.group.endDate);
                     }
+
                     return a.group.order - b.group.order;
                 });
 
@@ -643,7 +649,6 @@ async function generateAndSaveFromSubjects() {
     });
 
     const result = createBalancedSchedule(lectures, weekLimits);
-
     let finalSchedule = result.finalSchedule;
 
     if (result.unassigned.length > 0) {
@@ -695,42 +700,28 @@ async function generateAndSaveFromSubjects() {
     }
 }
 
+// --- 달력 이동 ---
+function moveCalendarMonth(delta) {
+    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
+    renderCalendarSchedule();
+}
+
 // --- 스케줄 불러오기 ---
 async function loadSchedule() {
     try {
         const res = await fetch('/api/tasks');
         const data = await res.json();
 
-        const box = document.getElementById('scheduleResult');
+        loadedScheduleData = data;
 
-        if (!box) return;
-
-        if (data.length === 0) {
-            box.innerHTML = "저장된 스케줄이 없습니다. '새 강의 입력' 메뉴에서 과목을 저장하고 스케줄을 생성해주세요.";
-            return;
+        if (loadedScheduleData.length > 0) {
+            const firstDate = extractDateOnly(loadedScheduleData[0].assigned_date);
+            if (firstDate) {
+                calendarCurrentDate = parseLocalDate(firstDate);
+            }
         }
 
-        let html = '';
-        let currentDate = '';
-
-        data.forEach(task => {
-            if (task.assigned_date !== currentDate) {
-                currentDate = task.assigned_date;
-                html += `<div class="day-title">📅 ${currentDate}</div>`;
-            }
-
-            html += `
-                <div class="item-row" style="padding-left: 15px;">
-                    <span>
-                        <span class="subject-tag">${task.subject}</span>
-                        <b>${task.lecture}</b>
-                    </span>
-                    <span>⏱️ ${task.duration}분</span>
-                </div>
-            `;
-        });
-
-        box.innerHTML = html;
+        renderCalendarSchedule();
 
     } catch (error) {
         console.error(error);
@@ -741,4 +732,91 @@ async function loadSchedule() {
             box.innerHTML = "스케줄을 불러오는 중 오류가 발생했습니다.";
         }
     }
+}
+
+// --- 달력형 스케줄 렌더링 ---
+function renderCalendarSchedule() {
+    const box = document.getElementById('scheduleResult');
+    const title = document.getElementById('calendarTitle');
+
+    if (!box) return;
+
+    if (!loadedScheduleData || loadedScheduleData.length === 0) {
+        box.innerHTML = `
+            <div class="empty-box">
+                저장된 스케줄이 없습니다.<br>
+                새 강의 입력에서 과목을 저장하고 스케줄을 생성해주세요.
+            </div>
+        `;
+        return;
+    }
+
+    const year = calendarCurrentDate.getFullYear();
+    const month = calendarCurrentDate.getMonth();
+
+    if (title) {
+        title.innerText = `📅 ${year}년 ${month + 1}월 학습 달력`;
+    }
+
+    const firstDay = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const startDayIndex = firstDay.getDay();
+
+    const scheduleByDate = {};
+
+    loadedScheduleData.forEach(task => {
+        const dateKey = extractDateOnly(task.assigned_date);
+
+        if (!scheduleByDate[dateKey]) {
+            scheduleByDate[dateKey] = [];
+        }
+
+        scheduleByDate[dateKey].push(task);
+    });
+
+    let html = `
+        <div class="calendar-week-row calendar-week-head">
+            <div>일</div>
+            <div>월</div>
+            <div>화</div>
+            <div>수</div>
+            <div>목</div>
+            <div>금</div>
+            <div>토</div>
+        </div>
+
+        <div class="calendar-grid">
+    `;
+
+    for (let i = 0; i < startDayIndex; i++) {
+        html += `<div class="calendar-day empty"></div>`;
+    }
+
+    for (let day = 1; day <= lastDate; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const tasks = scheduleByDate[dateKey] || [];
+        const totalMinutes = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
+
+        html += `
+            <div class="calendar-day ${tasks.length > 0 ? 'has-task' : ''}">
+                <div class="calendar-day-top">
+                    <span class="calendar-date-num">${day}</span>
+                    ${tasks.length > 0 ? `<span class="calendar-total">${totalMinutes}분</span>` : ''}
+                </div>
+
+                <div class="calendar-task-list">
+                    ${tasks.map(task => `
+                        <div class="calendar-task">
+                            <span class="calendar-task-subject">${task.subject}</span>
+                            <span class="calendar-task-lecture">${task.lecture}</span>
+                            <span class="calendar-task-duration">${task.duration}분</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    box.innerHTML = html;
 }
