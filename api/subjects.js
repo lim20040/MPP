@@ -2,62 +2,243 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-async function initWeekSettingsTable() {
+async function initTables() {
     await sql`
-        CREATE TABLE IF NOT EXISTS mpp_week_settings (
-            day_index INT PRIMARY KEY,
-            minutes INT NOT NULL DEFAULT 0
+        CREATE TABLE IF NOT EXISTS mpp_subject_plans (
+            id SERIAL PRIMARY KEY,
+            subject TEXT NOT NULL,
+            start_lecture INT NOT NULL,
+            end_lecture INT NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            lectures JSONB NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `;
 
     await sql`
-        INSERT INTO mpp_week_settings (day_index, minutes)
-        VALUES 
-            (0, 0),
-            (1, 0),
-            (2, 0),
-            (3, 0),
-            (4, 0),
-            (5, 0),
-            (6, 0)
-        ON CONFLICT (day_index) DO NOTHING
+        CREATE TABLE IF NOT EXISTS mpp_schedule (
+            id SERIAL PRIMARY KEY,
+            subject TEXT,
+            lecture TEXT,
+            duration INT,
+            assigned_date TEXT
+        )
     `;
+
+    await sql`
+        ALTER TABLE mpp_schedule
+        ADD COLUMN IF NOT EXISTS is_done BOOLEAN NOT NULL DEFAULT FALSE
+    `;
+}
+
+function extractDateOnly(assignedDate) {
+    if (!assignedDate) return '';
+    return String(assignedDate).slice(0, 10);
+}
+
+function extractLectureNumber(lecture) {
+    const match = String(lecture || '').match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+}
+
+async function migrateScheduleToSubjectsIfEmpty() {
+    const existingSubjects = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM mpp_subject_plans
+    `;
+
+    if (existingSubjects[0].count > 0) {
+        return;
+    }
+
+    const oldSchedule = await sql`
+        SELECT subject, lecture, duration, assigned_date
+        FROM mpp_schedule
+        ORDER BY subject ASC, id ASC
+    `;
+
+    if (oldSchedule.length === 0) {
+        return;
+    }
+
+    const grouped = new Map();
+
+    oldSchedule.forEach(item => {
+        const subject = item.subject || '이름 없는 과목';
+        const lectureNumber = extractLectureNumber(item.lecture);
+        const assignedDate = extractDateOnly(item.assigned_date);
+
+        if (!grouped.has(subject)) {
+            grouped.set(subject, {
+                subject,
+                startLecture: lectureNumber || 1,
+                endLecture: lectureNumber || 1,
+                startDate: assignedDate || '2026-06-18',
+                endDate: assignedDate || '2026-06-18',
+                lectures: []
+            });
+        }
+
+        const group = grouped.get(subject);
+
+        if (lectureNumber > 0) {
+            group.startLecture = Math.min(group.startLecture, lectureNumber);
+            group.endLecture = Math.max(group.endLecture, lectureNumber);
+        }
+
+        if (assignedDate) {
+            if (!group.startDate || assignedDate < group.startDate) {
+                group.startDate = assignedDate;
+            }
+
+            if (!group.endDate || assignedDate > group.endDate) {
+                group.endDate = assignedDate;
+            }
+        }
+
+        group.lectures.push({
+            lecture: item.lecture,
+            lectureNumber,
+            originalDuration: item.duration || 0,
+            duration: item.duration || 0,
+            reductionRate: 100
+        });
+    });
+
+    for (const group of grouped.values()) {
+        group.lectures.sort((a, b) => {
+            return a.lectureNumber - b.lectureNumber;
+        });
+
+        await sql`
+            INSERT INTO mpp_subject_plans (
+                subject,
+                start_lecture,
+                end_lecture,
+                start_date,
+                end_date,
+                lectures
+            )
+            VALUES (
+                ${group.subject},
+                ${group.startLecture},
+                ${group.endLecture},
+                ${group.startDate},
+                ${group.endDate},
+                ${JSON.stringify(group.lectures)}::jsonb
+            )
+        `;
+    }
 }
 
 export default async function handler(req, res) {
     try {
-        await initWeekSettingsTable();
+        await initTables();
 
         if (req.method === 'GET') {
+            await migrateScheduleToSubjectsIfEmpty();
+
             const data = await sql`
-                SELECT day_index, minutes
-                FROM mpp_week_settings
-                ORDER BY day_index ASC
+                SELECT
+                    id,
+                    subject,
+                    start_lecture,
+                    end_lecture,
+                    start_date,
+                    end_date,
+                    lectures,
+                    created_at
+                FROM mpp_subject_plans
+                ORDER BY id ASC
             `;
 
             return res.status(200).json(data);
         }
 
         if (req.method === 'POST') {
-            const { weekSettings } = req.body;
+            const {
+                id,
+                subject,
+                startLecture,
+                endLecture,
+                startDate,
+                endDate,
+                lectures
+            } = req.body;
 
-            if (!weekSettings || typeof weekSettings !== 'object') {
+            if (
+                !subject ||
+                !startLecture ||
+                !endLecture ||
+                !startDate ||
+                !endDate ||
+                !Array.isArray(lectures)
+            ) {
                 return res.status(400).json({
                     success: false,
-                    error: 'weekSettings object is required'
+                    error: '과목명, 시작 강, 끝 강, 시작일, 종료일, 강의 시간이 필요합니다.'
                 });
             }
 
-            for (let i = 0; i < 7; i++) {
-                const minutes = parseInt(weekSettings[i]) || 0;
-
+            if (id) {
                 await sql`
-                    INSERT INTO mpp_week_settings (day_index, minutes)
-                    VALUES (${i}, ${minutes})
-                    ON CONFLICT (day_index)
-                    DO UPDATE SET minutes = EXCLUDED.minutes
+                    UPDATE mpp_subject_plans
+                    SET
+                        subject = ${subject},
+                        start_lecture = ${startLecture},
+                        end_lecture = ${endLecture},
+                        start_date = ${startDate},
+                        end_date = ${endDate},
+                        lectures = ${JSON.stringify(lectures)}::jsonb
+                    WHERE id = ${id}
                 `;
+
+                return res.status(200).json({
+                    success: true,
+                    mode: 'updated'
+                });
             }
+
+            await sql`
+                INSERT INTO mpp_subject_plans (
+                    subject,
+                    start_lecture,
+                    end_lecture,
+                    start_date,
+                    end_date,
+                    lectures
+                )
+                VALUES (
+                    ${subject},
+                    ${startLecture},
+                    ${endLecture},
+                    ${startDate},
+                    ${endDate},
+                    ${JSON.stringify(lectures)}::jsonb
+                )
+            `;
+
+            return res.status(200).json({
+                success: true,
+                mode: 'created'
+            });
+        }
+
+        if (req.method === 'DELETE') {
+            const { id } = req.query;
+
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    error: '삭제할 과목 id가 필요합니다.'
+                });
+            }
+
+            await sql`
+                DELETE FROM mpp_subject_plans
+                WHERE id = ${id}
+            `;
 
             return res.status(200).json({
                 success: true
