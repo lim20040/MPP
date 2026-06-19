@@ -2,86 +2,62 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-async function initTables() {
+async function initWeekSettingsTable() {
     await sql`
-        CREATE TABLE IF NOT EXISTS mpp_schedule (
-            id SERIAL PRIMARY KEY,
-            subject TEXT,
-            lecture TEXT,
-            duration INT,
-            assigned_date TEXT
+        CREATE TABLE IF NOT EXISTS mpp_week_settings (
+            day_index INT PRIMARY KEY,
+            minutes INT NOT NULL DEFAULT 0
         )
     `;
 
     await sql`
-        ALTER TABLE mpp_schedule
-        ADD COLUMN IF NOT EXISTS is_done BOOLEAN NOT NULL DEFAULT FALSE
+        INSERT INTO mpp_week_settings (day_index, minutes)
+        VALUES 
+            (0, 0),
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (4, 0),
+            (5, 0),
+            (6, 0)
+        ON CONFLICT (day_index) DO NOTHING
     `;
 }
 
 export default async function handler(req, res) {
     try {
-        await initTables();
+        await initWeekSettingsTable();
 
         if (req.method === 'GET') {
             const data = await sql`
-                SELECT *
-                FROM mpp_schedule
-                ORDER BY assigned_date ASC, id ASC
+                SELECT day_index, minutes
+                FROM mpp_week_settings
+                ORDER BY day_index ASC
             `;
 
             return res.status(200).json(data);
         }
 
         if (req.method === 'POST') {
-            const { schedule } = req.body;
+            const { weekSettings } = req.body;
 
-            if (!Array.isArray(schedule)) {
+            if (!weekSettings || typeof weekSettings !== 'object') {
                 return res.status(400).json({
                     success: false,
-                    error: 'schedule must be an array'
+                    error: 'weekSettings object is required'
                 });
             }
 
-            await sql`DELETE FROM mpp_schedule`;
+            for (let i = 0; i < 7; i++) {
+                const minutes = parseInt(weekSettings[i]) || 0;
 
-            for (let s of schedule) {
                 await sql`
-                    INSERT INTO mpp_schedule (
-                        subject,
-                        lecture,
-                        duration,
-                        assigned_date,
-                        is_done
-                    )
-                    VALUES (
-                        ${s.subject},
-                        ${s.lecture},
-                        ${s.duration},
-                        ${s.assigned_date},
-                        ${s.is_done === true}
-                    )
+                    INSERT INTO mpp_week_settings (day_index, minutes)
+                    VALUES (${i}, ${minutes})
+                    ON CONFLICT (day_index)
+                    DO UPDATE SET minutes = EXCLUDED.minutes
                 `;
             }
-
-            return res.status(200).json({ success: true });
-        }
-
-        if (req.method === 'PATCH') {
-            const { id, is_done } = req.body;
-
-            if (!id) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'id is required'
-                });
-            }
-
-            await sql`
-                UPDATE mpp_schedule
-                SET is_done = ${is_done === true}
-                WHERE id = ${id}
-            `;
 
             return res.status(200).json({
                 success: true
