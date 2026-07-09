@@ -163,12 +163,12 @@ async function loadWeekSettingsFromDB() {
 function getReductionRate() {
     const input = document.getElementById('timeReductionRate');
 
-    if (!input) return 75;
+    if (!input) return 80;
 
     const rate = parseInt(input.value);
 
     if (isNaN(rate) || rate <= 0) {
-        return 75;
+        return 80;
     }
 
     return Math.min(Math.max(rate, 50), 100);
@@ -1079,14 +1079,6 @@ async function loadSchedule() {
         const data = await res.json();
 
         loadedScheduleData = data;
-
-        if (loadedScheduleData.length > 0) {
-            const firstDate = extractDateOnly(loadedScheduleData[0].assigned_date);
-
-            if (firstDate) {
-                calendarCurrentDate = parseLocalDate(firstDate);
-            }
-        }
 
         renderCalendarSchedule();
 

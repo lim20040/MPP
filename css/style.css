@@ -409,12 +409,14 @@ button {
 
 .calendar-day {
     min-height: 155px;
+    max-height: 155px;
     background: white;
     border-right: 1px solid var(--border);
     border-top: 1px solid var(--border);
     padding: 0.65rem;
     box-sizing: border-box;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-day.empty {
@@ -430,6 +432,7 @@ button {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.45rem;
+    flex-shrink: 0;
 }
 
 .calendar-date-num {
@@ -450,6 +453,23 @@ button {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    overflow-y: auto;
+    padding-right: 4px;
+    flex-grow: 1;
+}
+
+.calendar-task-list::-webkit-scrollbar {
+    width: 4px;
+}
+.calendar-task-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.calendar-task-list::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+.calendar-task-list::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
 }
 
 .calendar-task {
