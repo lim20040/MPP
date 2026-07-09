@@ -14,20 +14,37 @@
         </div>
     </nav>
 
-    <div class="calendar-page-container">
-        <div class="card calendar-card">
-            <div class="calendar-header">
-                <h2>📋 나의 학습 리스트</h2>
-                <button class="btn-generate" style="width: auto; margin-top: 0; padding: 0.6rem 1.2rem; font-size: 0.9rem;" onclick="forceReschedule()">
-                    🔄 남은 일정 재분배
+    <div class="main-container">
+        <!-- 달력 영역과 상세 리스트 영역을 나누는 레이아웃 -->
+        <div class="calendar-layout">
+            
+            <!-- 왼쪽: 깔끔해진 달력 -->
+            <div class="card calendar-card" style="padding: 1.5rem;">
+                <div class="calendar-header" style="margin-bottom: 1rem;">
+                    <button class="calendar-nav-btn" onclick="moveCalendarMonth(-1)">‹</button>
+                    <h2 id="calendarTitle">📅 학습 달력</h2>
+                    <button class="calendar-nav-btn" onclick="moveCalendarMonth(1)">›</button>
+                </div>
+                
+                <div id="rescheduleNotice" class="reschedule-notice" style="display: none;"></div>
+                
+                <div id="scheduleResult" class="calendar-box">
+                    불러오는 중...
+                </div>
+
+                <button class="btn-generate" style="margin-top: 15px;" onclick="forceReschedule()">
+                    🔄 남은 전체 일정 재분배
                 </button>
             </div>
 
-            <div id="rescheduleNotice" class="reschedule-notice" style="display: none;"></div>
-
-            <div id="scheduleResult" class="schedule-list-box">
-                불러오는 중...
+            <!-- 오른쪽: 클릭한 날짜의 상세 일정 -->
+            <div class="card daily-task-card" style="padding: 1.5rem;">
+                <h2 id="dailyTitle" style="margin-bottom: 1rem; color: var(--primary);">📋 일정 상세</h2>
+                <div id="dailyTaskList" class="task-list">
+                    달력에서 날짜를 클릭해주세요.
+                </div>
             </div>
+
         </div>
     </div>
 

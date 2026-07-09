@@ -95,424 +95,152 @@ body {
     color: var(--text-main);
 }
 
-.form-group {
-    margin-bottom: 1.25rem;
-}
+/* 입력 폼 공통 스타일 */
+.form-group { margin-bottom: 1.25rem; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; transition: 0.2s; box-sizing: border-box; background: #F9FAFB; }
+input:focus { outline: none; border-color: var(--primary); background: #FFF; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+button { width: 100%; padding: 0.875rem; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; border: none; }
+.btn-add { background: #64748B; color: white; }
+.btn-add:hover { background: #475569; }
+.btn-generate { background: var(--primary); color: white; margin-top: 1.5rem; }
+.btn-generate:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-.form-group label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-}
+/* 요일별 설정 */
+.week-settings { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+.time-input { background: #F8FAFC; padding: 1rem 0.5rem; border-radius: 12px; border: 1px solid var(--border); }
+.time-input label { font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted); display: block; text-align: center; }
+.time-input input { border: none; background: transparent; font-size: 1.1rem; font-weight: 700; color: var(--primary); text-align: center; padding: 0; }
 
-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: 0.2s;
-    box-sizing: border-box;
-    background: #F9FAFB;
-}
+/* 유틸/과목 입력부 */
+.help-text { margin-top: 0.45rem; color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; }
+.empty-box { background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 12px; padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
+.duration-guide { background: #EEF2FF; color: var(--primary); border: 1px solid #C7D2FE; border-radius: 10px; padding: 0.8rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem; }
+.bulk-lecture-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.bulk-lecture-item { display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; padding: 8px; border: 1px solid #E2E8F0; border-radius: 6px; }
+.duration-input-item { flex-direction: column; align-items: stretch; gap: 6px; }
+.duration-input-item span { text-align: center; font-weight: 700; color: var(--primary); }
+.duration-input-item small { display: block; text-align: center; color: var(--text-muted); font-size: 0.72rem; }
 
-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: #FFF;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-}
+/* 저장된 과목 카드 */
+.subject-tag { background: var(--primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; margin-right: 8px; }
+.subject-plan-card { background: #F8FAFC; border: 1px solid var(--border); border-radius: 14px; padding: 1rem; margin-bottom: 1rem; }
+.subject-plan-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.subject-plan-date { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+.subject-plan-meta { margin-top: 0.7rem; font-size: 0.85rem; color: var(--text-muted); }
+.subject-plan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.9rem; }
+.subject-plan-actions button { padding: 0.65rem; font-size: 0.85rem; background: var(--primary); color: white; }
+.subject-plan-actions button.danger { background: #EF4444; }
 
-.week-settings {
+/* === 클릭 가능한 달력 & 리스트 UI 레이아웃 === */
+.calendar-layout {
+    grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-}
-
-.time-input {
-    background: #F8FAFC;
-    padding: 1rem 0.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-}
-
-.time-input label {
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-    color: var(--text-muted);
-    display: block;
-    text-align: center;
-}
-
-.time-input input {
-    border: none;
-    background: transparent;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary);
-    text-align: center;
-    padding: 0;
-}
-
-button {
-    width: 100%;
-    padding: 0.875rem;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-    border: none;
-}
-
-.btn-add {
-    background: #64748B;
-    color: white;
-}
-
-.btn-add:hover {
-    background: #475569;
-}
-
-.btn-generate {
-    background: var(--primary);
-    color: white;
-    margin-top: 1.5rem;
-}
-
-.btn-generate:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-}
-
-.help-text {
-    margin-top: 0.45rem;
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    line-height: 1.5;
-}
-
-.empty-box {
-    background: #F8FAFC;
-    border: 1px dashed #CBD5E1;
-    border-radius: 12px;
-    padding: 1.2rem;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.bulk-expanded-subject {
-    margin-top: 15px;
-    padding: 14px;
-    background: white;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-}
-
-.bulk-expanded-title {
-    font-weight: 800;
-    color: var(--primary);
-    margin-bottom: 10px;
-}
-
-.duration-guide {
-    background: #EEF2FF;
-    color: var(--primary);
-    border: 1px solid #C7D2FE;
-    border-radius: 10px;
-    padding: 0.8rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
-
-.bulk-lecture-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-}
-
-.bulk-lecture-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #F8FAFC;
-    padding: 8px;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-}
-
-.duration-input-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-}
-
-.duration-input-item span {
-    text-align: center;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.duration-input-item input {
-    width: 100%;
-}
-
-.duration-input-item small {
-    display: block;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-}
-
-.subject-tag {
-    background: var(--primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-right: 8px;
-}
-
-.subject-plan-card {
-    background: #F8FAFC;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.subject-plan-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.subject-plan-date {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-.subject-plan-meta {
-    margin-top: 0.7rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.subject-plan-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 0.8rem;
-}
-
-.subject-plan-preview span {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    color: var(--text-main);
-}
-
-.subject-plan-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 0.9rem;
-}
-
-.subject-plan-actions button {
-    padding: 0.65rem;
-    font-size: 0.85rem;
-    background: var(--primary);
-    color: white;
-}
-
-.subject-plan-actions button.danger {
-    background: #EF4444;
-}
-
-.calendar-page-container {
-    max-width: 900px; /* 리스트 뷰에 맞게 폭 조정 */
-    margin: 2.5rem auto;
-    padding: 0 1.5rem;
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.calendar-header h2 {
-    margin: 0;
-}
-
-/* 리스트 뷰 전용 스타일 */
-.schedule-list-box {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 1.2fr 1fr; /* 달력이 조금 더 넓게 */
     gap: 1.5rem;
+    align-items: start;
 }
 
-.date-group {
-    background: #F8FAFC;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-}
+.calendar-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.calendar-header h2 { margin: 0; }
+.calendar-nav-btn { width: 44px; height: 44px; padding: 0; border-radius: 50%; background: #EEF2FF; color: var(--primary); font-size: 1.8rem; line-height: 1; }
 
-.date-group-header {
-    background: #EEF2FF;
-    padding: 1rem 1.25rem;
-    font-weight: 800;
-    color: var(--primary);
-    border-bottom: 1px solid #C7D2FE;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+.calendar-week-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+.calendar-week-head { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px 12px 0 0; overflow: hidden; }
+.calendar-week-head div { padding: 0.6rem; text-align: center; font-size: 0.85rem; font-weight: 800; color: var(--text-muted); border-right: 1px solid var(--border); }
+.calendar-week-head div:last-child { border-right: none; }
 
-.today-badge {
-    background: var(--primary);
-    color: white;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    margin-left: 8px;
-}
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 
-.task-list {
-    padding: 1rem;
+/* 작아지고 클릭 가능해진 달력 칸 */
+.calendar-day {
+    min-height: 80px; /* 크기를 대폭 줄임 */
+    background: white;
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    padding: 0.5rem;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: 0.2s;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-}
-
-.task-item {
-    display: flex;
     align-items: center;
-    background: white;
-    border: 1px solid var(--border);
-    padding: 0.8rem 1.25rem;
-    border-radius: 8px;
-    gap: 1rem;
-    transition: 0.2s;
 }
 
-.task-item:hover {
-    border-color: #CBD5E1;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+.calendar-day:hover { background: #F8FAFC; }
+.calendar-day.empty { background: #F1F5F9; cursor: default; }
+.calendar-day.has-task { background: #FFFFFF; }
+.calendar-day.selected { 
+    background: #EEF2FF; 
+    box-shadow: inset 0 0 0 2px var(--primary); 
+    border-color: transparent; 
+    z-index: 10;
 }
 
-.task-item.done {
-    opacity: 0.5;
-    background: #F1F5F9;
-}
-
-.task-item.done .task-info {
-    text-decoration: line-through;
-}
-
-.task-checkbox {
-    width: 1.2rem;
-    height: 1.2rem;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.task-info {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.task-subject {
+.calendar-date-num {
     font-weight: 800;
-    color: var(--primary);
-    min-width: 120px;
-}
-
-.task-lecture {
-    font-weight: 700;
-    flex-grow: 1;
-}
-
-.task-duration {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    background: #F1F5F9;
-    padding: 4px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-}
-
-.reschedule-notice {
-    background: #FFFBEB;
-    border: 1px solid #FBBF24;
-    color: #92400E;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1.2rem;
-    font-size: 0.9rem;
-}
-
-.reschedule-actions {
+    color: var(--text-main);
+    font-size: 0.95rem;
+    width: 24px;
+    height: 24px;
     display: flex;
-    gap: 8px;
-    margin-top: 0.8rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
 
-.reschedule-actions button {
-    padding: 0.65rem;
-    font-size: 0.85rem;
-    background: #F59E0B;
+.calendar-date-num.today {
+    background: var(--primary);
     color: white;
 }
 
-.reschedule-actions button.muted {
-    background: #94A3B8;
+/* 달력 요약 뱃지 */
+.calendar-task-summary {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: #E0E7FF;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-top: 6px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
 }
+
+.calendar-task-summary.all-done {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+/* 오른쪽 일일 상세 리스트 */
+.task-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.task-item { display: flex; align-items: center; background: white; border: 1px solid var(--border); padding: 1rem; border-radius: 12px; gap: 1rem; transition: 0.2s; }
+.task-item:hover { border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1); }
+.task-item.done { opacity: 0.5; background: #F8FAFC; border-color: var(--border); box-shadow: none; }
+.task-item.done .task-info { text-decoration: line-through; }
+.task-checkbox { width: 1.4rem; height: 1.4rem; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+.task-info { flex-grow: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+.task-subject { font-weight: 800; color: var(--primary); font-size: 0.85rem; }
+.task-lecture { font-weight: 700; font-size: 1.05rem; }
+.task-duration { color: var(--text-muted); font-size: 0.8rem; display: inline-block; background: #F1F5F9; padding: 2px 8px; border-radius: 6px; width: max-content; margin-top: 4px; }
+
+/* 재분배 알림 */
+.reschedule-notice { background: #FFFBEB; border: 1px solid #FBBF24; color: #92400E; border-radius: 12px; padding: 1rem; margin-bottom: 1.2rem; font-size: 0.9rem; }
+.reschedule-actions { display: flex; gap: 8px; margin-top: 0.8rem; }
+.reschedule-actions button { padding: 0.65rem; font-size: 0.85rem; background: #F59E0B; color: white; }
 
 @media (max-width: 900px) {
-    .main-container {
-        grid-template-columns: 1fr;
-    }
-    .week-settings {
-        grid-template-columns: repeat(4, 1fr);
-    }
+    .main-container { grid-template-columns: 1fr; }
+    .calendar-layout { grid-template-columns: 1fr; gap: 1rem; }
+    .week-settings { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 600px) {
-    .navbar {
-        padding: 1rem;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    .nav-links a {
-        margin-left: 0;
-        padding: 0.4rem 0.7rem;
-    }
-    .week-settings {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .card {
-        padding: 1.3rem;
-    }
-    .task-info { 
-        flex-direction: column; 
-        align-items: flex-start; 
-        gap: 0.25rem; 
-    }
-    .task-subject { min-width: auto; }
+    .navbar { padding: 1rem; flex-direction: column; gap: 0.75rem; }
+    .nav-links a { margin-left: 0; padding: 0.4rem 0.7rem; }
+    .week-settings { grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 1.2rem; }
+    .calendar-day { min-height: 60px; padding: 0.25rem; }
+    .calendar-task-summary { display: none; } /* 모바일에서는 칸이 너무 작아 요약 뱃지 숨김 */
 }
