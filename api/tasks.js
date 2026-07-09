@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'PATCH') {
-            const { id, is_done } = req.body;
+            const { id, is_done, assigned_date } = req.body;
 
             if (!id) {
                 return res.status(400).json({
@@ -77,11 +77,20 @@ export default async function handler(req, res) {
                 });
             }
 
-            await sql`
-                UPDATE mpp_schedule
-                SET is_done = ${is_done === true}
-                WHERE id = ${id}
-            `;
+            // assigned_date가 같이 들어오면 날짜도 업데이트
+            if (assigned_date) {
+                await sql`
+                    UPDATE mpp_schedule
+                    SET is_done = ${is_done === true}, assigned_date = ${assigned_date}
+                    WHERE id = ${id}
+                `;
+            } else {
+                await sql`
+                    UPDATE mpp_schedule
+                    SET is_done = ${is_done === true}
+                    WHERE id = ${id}
+                `;
+            }
 
             return res.status(200).json({
                 success: true

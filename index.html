@@ -17,14 +17,15 @@
     <div class="calendar-page-container">
         <div class="card calendar-card">
             <div class="calendar-header">
-                <button class="calendar-nav-btn" onclick="moveCalendarMonth(-1)">‹</button>
-                <h2 id="calendarTitle">📅 나의 학습 달력</h2>
-                <button class="calendar-nav-btn" onclick="moveCalendarMonth(1)">›</button>
+                <h2>📋 나의 학습 리스트</h2>
+                <button class="btn-generate" style="width: auto; margin-top: 0; padding: 0.6rem 1.2rem; font-size: 0.9rem;" onclick="forceReschedule()">
+                    🔄 남은 일정 재분배
+                </button>
             </div>
 
             <div id="rescheduleNotice" class="reschedule-notice" style="display: none;"></div>
 
-            <div id="scheduleResult" class="calendar-box">
+            <div id="scheduleResult" class="schedule-list-box">
                 불러오는 중...
             </div>
         </div>

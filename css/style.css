@@ -340,13 +340,9 @@ button {
 }
 
 .calendar-page-container {
-    max-width: 1400px;
+    max-width: 900px; /* 리스트 뷰에 맞게 폭 조정 */
     margin: 2.5rem auto;
     padding: 0 1.5rem;
-}
-
-.calendar-card {
-    width: 100%;
 }
 
 .calendar-header {
@@ -361,175 +357,104 @@ button {
     margin: 0;
 }
 
-.calendar-nav-btn {
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border-radius: 50%;
-    background: #EEF2FF;
-    color: var(--primary);
-    font-size: 1.8rem;
-    line-height: 1;
+/* 리스트 뷰 전용 스타일 */
+.schedule-list-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.calendar-box {
-    width: 100%;
-}
-
-.calendar-week-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.calendar-week-head {
+.date-group {
     background: #F8FAFC;
     border: 1px solid var(--border);
-    border-radius: 12px 12px 0 0;
+    border-radius: 12px;
     overflow: hidden;
 }
 
-.calendar-week-head div {
-    padding: 0.8rem;
-    text-align: center;
+.date-group-header {
+    background: #EEF2FF;
+    padding: 1rem 1.25rem;
     font-weight: 800;
-    color: var(--text-muted);
-    border-right: 1px solid var(--border);
-}
-
-.calendar-week-head div:last-child {
-    border-right: none;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-left: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-}
-
-.calendar-day {
-    min-height: 155px;
-    max-height: 155px;
-    background: white;
-    border-right: 1px solid var(--border);
-    border-top: 1px solid var(--border);
-    padding: 0.65rem;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-}
-
-.calendar-day.empty {
-    background: #F8FAFC;
-}
-
-.calendar-day.has-task {
-    background: #FCFCFF;
-}
-
-.calendar-day-top {
+    color: var(--primary);
+    border-bottom: 1px solid #C7D2FE;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.45rem;
-    flex-shrink: 0;
 }
 
-.calendar-date-num {
-    font-weight: 800;
-    color: var(--text-main);
-}
-
-.calendar-total {
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: var(--primary);
-    background: #EEF2FF;
+.today-badge {
+    background: var(--primary);
+    color: white;
+    padding: 3px 10px;
     border-radius: 999px;
-    padding: 2px 7px;
+    font-size: 0.75rem;
+    margin-left: 8px;
 }
 
-.calendar-task-list {
+.task-list {
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    overflow-y: auto;
-    padding-right: 4px;
-    flex-grow: 1;
+    gap: 0.75rem;
 }
 
-.calendar-task-list::-webkit-scrollbar {
-    width: 4px;
-}
-.calendar-task-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-.calendar-task-list::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
-    border-radius: 4px;
-}
-.calendar-task-list::-webkit-scrollbar-thumb:hover {
-    background: #94A3B8;
-}
-
-.calendar-task {
-    background: #EEF2FF;
-    border: 1px solid #C7D2FE;
+.task-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--border);
+    padding: 0.8rem 1.25rem;
     border-radius: 8px;
-    padding: 5px 6px;
+    gap: 1rem;
+    transition: 0.2s;
 }
 
-.calendar-task.done {
-    opacity: 0.45;
-    background: #E5E7EB;
+.task-item:hover {
     border-color: #CBD5E1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.calendar-task.done .calendar-task-subject,
-.calendar-task.done .calendar-task-lecture,
-.calendar-task.done .calendar-task-duration {
+.task-item.done {
+    opacity: 0.5;
+    background: #F1F5F9;
+}
+
+.task-item.done .task-info {
     text-decoration: line-through;
 }
 
-.calendar-task-check {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
+.task-checkbox {
+    width: 1.2rem;
+    height: 1.2rem;
     cursor: pointer;
+    accent-color: var(--primary);
 }
 
-.calendar-task-check input {
-    width: auto;
-    margin-top: 3px;
-    padding: 0;
-    box-shadow: none;
+.task-info {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.calendar-task-check span {
-    min-width: 0;
-}
-
-.calendar-task-subject {
-    display: block;
-    font-size: 0.72rem;
+.task-subject {
     font-weight: 800;
     color: var(--primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 120px;
 }
 
-.calendar-task-lecture {
-    display: block;
-    font-size: 0.78rem;
+.task-lecture {
     font-weight: 700;
-    color: var(--text-main);
+    flex-grow: 1;
 }
 
-.calendar-task-duration {
-    display: block;
-    font-size: 0.7rem;
+.task-duration {
     color: var(--text-muted);
+    font-size: 0.85rem;
+    background: #F1F5F9;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
 }
 
 .reschedule-notice {
@@ -563,26 +488,8 @@ button {
     .main-container {
         grid-template-columns: 1fr;
     }
-
     .week-settings {
         grid-template-columns: repeat(4, 1fr);
-    }
-
-    .calendar-page-container {
-        padding: 0 0.75rem;
-    }
-
-    .calendar-day {
-        min-height: 120px;
-        padding: 0.45rem;
-    }
-
-    .calendar-task {
-        padding: 4px;
-    }
-
-    .calendar-task-duration {
-        display: none;
     }
 }
 
@@ -592,17 +499,20 @@ button {
         flex-direction: column;
         gap: 0.75rem;
     }
-
     .nav-links a {
         margin-left: 0;
         padding: 0.4rem 0.7rem;
     }
-
     .week-settings {
         grid-template-columns: repeat(2, 1fr);
     }
-
     .card {
         padding: 1.3rem;
     }
+    .task-info { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 0.25rem; 
+    }
+    .task-subject { min-width: auto; }
 }
